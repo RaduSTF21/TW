@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"><!--asigura faptul ca aplicatia este responsive atat pe telefon cat si pe desktop-->
+    <title>Imobiliare - Apartamente de închiriat</title>
+    <!-- Conectarea fișierului CSS -->
+    <link rel="stylesheet" href="imob.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">ImobiliareIasi.ro</div>
+    </header>
+    
+    <!-- Meniu de navigare -->
+    <nav>
+        <a href="#">Acasă</a>
+        <a href="#">Anunțuri</a>
+        <a href="#">Adaugă anunț</a>
+        <a href="#">Contact</a>
+    </nav>
+    
+    <!-- Conținut principal -->
+    <div class="main-content">
+        <!-- Formular de căutare -->
+        <div class="search-box">
+            <h2>Caută apartamente în Iași</h2>
+            <div class="filter-row">
+                <div class="filter-item">
+                    <label for="transaction-type">Tip tranzacție:</label>
+                    <select id="transaction-type">
+                        <option value="inchiriere">De închiriat</option>
+                        <option value="vanzare">De vânzare</option>
+                    </select>
+                </div>
+                
+                <div class="filter-item">
+                    <label for="property-type">Tip proprietate:</label>
+                    <select id="property-type">
+                        <option value="apartament">Apartament</option>
+                        <option value="garsoniera">Garsonieră</option>
+                        <option value="casa">Casă</option>
+                    </select>
+                </div>
+                
+                <div class="filter-item">
+                    <label for="rooms">Camere:</label>
+                    <select id="rooms">
+                        <option value="toate">Toate</option>
+                        <option value="1">1 cameră</option>
+                        <option value="2">2 camere</option>
+                        <option value="3">3 camere</option>
+                        <option value="4+">4+ camere</option>
+                    </select>
+                </div>
+                
+                <div class="filter-item">
+                    <label for="price">Preț maxim (€):</label>
+                    <input type="number" id="price" placeholder="Preț maxim">
+                </div>
+            </div>
+            
+            <button id="search-btn">Caută</button>
+        </div>
+        
+        <h2>Apartamente de închiriat în Iași</h2>
+        
+        <!-- Lista de proprietăți -->
+        <div class="property-list" id="property-container">
+            <!-- Proprietățile vor fi adăugate dinamic cu JavaScript -->
+        </div>
+    </div>
+   
+
+    <!-- Conectarea fișierului JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
