@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Real Estate Map</title>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"
+  />
+
+  <style>
+    /* Full-screen map container */
+    #map { height: 90vh; width: 100%; }
+  </style>
+</head>
+<body>
+  <h1>Properties Map</h1>
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+ const map = L.map('map').setView([45.75, 21.23], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  // 2. Store markers so we can clear them
+  let markersLayer = L.layerGroup().addTo(map);
+
+  // 3. Function to load & display properties within current bounds
+  function loadProperties() {
+    // Get current map bounds
+    const bounds = map.getBounds();
+    const lat_min = bounds.getSouth();
+    const lat_max = bounds.getNorth();
+    const lng_min = bounds.getWest();
+    const lng_max = bounds.getEast();
+
+    // Build query string
+    const qs = `?lat_min=${lat_min}&lat_max=${lat_max}&lng_min=${lng_min}&lng_max=${lng_max}`;
+
+    fetch('api/properties.php' + qs)
+      .then(res => res.json())
+      .then(properties => {
+        // Clear old markers
+        markersLayer.clearLayers();
+
+        // Add new markers
+        properties.forEach(p => {
+          if (p.latitude && p.longitude) {
+            const marker = L.marker([p.latitude, p.longitude])
+              .bindPopup(`<strong>${p.title}</strong><br>€${p.price}`);
+            markersLayer.addLayer(marker);
+          }
+        });
+      })
+      .catch(err => console.error('Error loading properties:', err));
+  }
+
+  // 4. Initial load
+  loadProperties();
+
+  // 5. Reload on map move or zoom end
+  map.on('moveend', loadProperties);
+  </script>
+</body>
+</html>
