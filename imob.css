@@ -1,11 +1,9 @@
-
+/* Base styling */
 body {
     font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
+    margin: 0; padding: 0;
     background-color: #f8f8f8;
 }
-
 
 header {
     background-color: #0066cc;
@@ -14,11 +12,9 @@ header {
     text-align: center;
 }
 
-/* Meniu de navigare */
 nav {
     background-color: #004499;
-    padding: 10px;
-    text-align: center;
+    padding: 10px; text-align: center;
 }
 
 nav a {
@@ -32,14 +28,12 @@ nav a:hover {
     text-decoration: underline;
 }
 
-/* Secțiunea principală */
 .main-content {
     max-width: 1000px;
     margin: 20px auto;
     padding: 0 15px;
 }
 
-/* Formularul de căutare */
 .search-box {
     background-color: white;
     padding: 15px;
@@ -54,19 +48,16 @@ nav a:hover {
 }
 
 .filter-row {
-    display: flex;
-    flex-wrap: wrap;
+    display: flex; flex-wrap: wrap;
     margin-bottom: 15px;
 }
 
 .filter-item {
-    margin-right: 15px;
-    margin-bottom: 10px;
+    margin-right: 15px; margin-bottom: 10px;
 }
 
 .filter-item label {
-    display: block;
-    margin-bottom: 5px;
+    display: block; margin-bottom: 5px;
     font-weight: bold;
 }
 
@@ -86,20 +77,82 @@ button {
     cursor: pointer;
 }
 
-/* Lista de proprietăți */
+/* === Listing cards as a 3-column grid === */
+.property-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 20px;
+}
 
+@media (max-width: 992px) {
+    .property-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
 
-@media (max-width: 768px) {
-    .filter-row {
-        flex-direction: column;
+@media (max-width: 600px) {
+    .property-list {
+        grid-template-columns: 1fr;
     }
-    
-    .filter-item {
-        width: 100%;
-        margin-right: 0;
-    }
-    
-    .property-card {
-        width: 100%;
-    }
+}
+
+/* Card styling */
+.property-card {
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+}
+
+.property-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Image occupies top ¾ (4:3 ratio) */
+.property-image {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+}
+
+/* Info section beneath image */
+.property-info {
+    padding: 15px;
+    background-color: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Title */
+.property-info h3 {
+    font-size: 18px;
+    margin: 0 0 10px;
+    color: #333;
+}
+
+/* Price */
+.property-info .price {
+    font-weight: bold;
+    color: #0066cc;
+    margin-bottom: 10px;
+}
+
+/* “Detalii” button */
+.property-info .details-btn {
+    display: inline-block;
+    padding: 8px 12px;
+    background-color: #0066cc;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.property-info .details-btn:hover {
+    background-color: #0055aa;
 }
