@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Înregistrare - ImobiliareIasi.ro</title>
+  <link rel="stylesheet" href="register.css">
+</head>
+<body>
+  <div class="register-container">
+    <div class="back-link">
+      <a href="imob.html">← Înapoi la site</a>
+    </div>
+    
+    <h1>ÎNREGISTRARE</h1>
+    
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="firstName">Prenume:</label>
+        <input type="text" id="firstName" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="lastName">Nume:</label>
+        <input type="text" id="lastName" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" id="email" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="phone">Telefon:</label>
+        <input type="tel" id="phone" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Parolă:</label>
+        <input type="password" id="password" required minlength="6">
+      </div>
+      
+      <div class="form-group">
+        <label for="confirmPassword">Confirmă parola:</label>
+        <input type="password" id="confirmPassword" required minlength="6">
+      </div>
+      
+      <div class="form-group">
+        <label for="userType">Tip utilizator:</label>
+        <select id="userType" required>
+          <option value="">Selectează tipul</option>
+          <option value="client">Client (caut proprietate)</option>
+          <option value="proprietar">Proprietar (ofer proprietate)</option>
+          <option value="agent">Agent imobiliar</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="terms" required>
+          Sunt de acord cu <a href="#" class="terms-link">termenii și condițiile</a>
+        </label>
+      </div>
+      
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="newsletter">
+          Doresc să primesc newsletter cu oferte noi
+        </label>
+      </div>
+      
+      <div class="button-group">
+        <button type="button" class="back-button" onclick="window.history.back()">Înapoi</button>
+        <button type="submit">Creează cont</button>
+      </div>
+    </form>
+    
+    <div class="links">
+      <p>Ai deja cont? <a href="login.html">Conectează-te aici</a></p>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const firstName = document.getElementById('firstName').value;
+      const lastName = document.getElementById('lastName').value;
+      const email = document.getElementById('email').value;
+      const phone = document.getElementById('phone').value;
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const userType = document.getElementById('userType').value;
+      const terms = document.getElementById('terms').checked;
+      
+      // Validări
+      if (!firstName || !lastName || !email || !phone || !password || !confirmPassword || !userType) {
+        alert('Te rugăm să completezi toate câmpurile obligatorii!');
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        alert('Parolele nu se potrivesc!');
+        return;
+      }
+      
+      if (password.length < 6) {
+        alert('Parola trebuie să aibă cel puțin 6 caractere!');
+        return;
+      }
+      
+      if (!terms) {
+        alert('Trebuie să accepți termenii și condițiile!');
+        return;
+      }
+      
+      // Validare email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        alert('Te rugăm să introduci o adresă de email validă!');
+        return;
+      }
+      
+      // Validare telefon (format românesc simplu)
+      const phoneRegex = /^[0-9+\-\s()]{10,}$/;
+      if (!phoneRegex.test(phone)) {
+        alert('Te rugăm să introduci un număr de telefon valid!');
+        return;
+      }
+      
+      // Simulare înregistrare reușită
+      alert(`Cont creat cu succes pentru ${firstName} ${lastName}!\nTip utilizator: ${userType}\nVei fi redirecționat către pagina de login...`);
+      
+      // Redirect către pagina de login
+      setTimeout(() => {
+        window.location.href = 'login.html';
+      }, 2000);
+    });
+    
+    // Verificare în timp real pentru parole
+    document.getElementById('confirmPassword').addEventListener('input', function() {
+      const password = document.getElementById('password').value;
+      const confirmPassword = this.value;
+      
+      if (password && confirmPassword && password !== confirmPassword) {
+        this.setCustomValidity('Parolele nu se potrivesc');
+      } else {
+        this.setCustomValidity('');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -5,21 +5,108 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Imobiliare - Apartamente de închiriat</title>
   <link rel="stylesheet" href="imob.css" />
+  <style>
+    /* Footer Styles */
+    footer {
+      background-color: #2c3e50;
+      color: white;
+      padding: 40px 20px 20px;
+      margin-top: 50px;
+    }
+    
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+    }
+    
+    .footer-section h3 {
+      color: #3498db;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+    
+    .footer-section p, .footer-section li {
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+    
+    .footer-section ul {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .footer-section a {
+      color: #ecf0f1;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    
+    .footer-section a:hover {
+      color: #3498db;
+    }
+    
+    .contact-info {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .contact-info i {
+      margin-right: 10px;
+      width: 20px;
+    }
+    
+    .footer-bottom {
+      border-top: 1px solid #34495e;
+      margin-top: 30px;
+      padding-top: 20px;
+      text-align: center;
+      color: #bdc3c7;
+    }
+    
+    .social-links {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+    }
+    
+    .social-links a {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      background-color: #3498db;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 40px;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    
+    .social-links a:hover {
+      background-color: #2980b9;
+    }
+  </style>
 </head>
 <body>
   <!-- Header -->
   <header>
     <div class="logo">ImobiliareIasi.ro</div>
   </header>
-
+ 
   <!-- Navigation -->
   <nav>
     <a href="imob.html">Acasă</a>
     <a href="anunturi.html">Anunțuri</a>
-    <a href="admin/properties.php">Adaugă anunț</a>
-    <a href="#">Contact</a>
+    <a href="../properties.php">Adaugă anunț</a>
+    <a href="contact.html">Contact</a>
+    <!-- Corectat: login.html este în același folder uploads -->
+    <a href="login.html">Login</a>
+    <a href="register.html">Register</a>
   </nav>
-
+ 
   <!-- Main Content -->
   <div class="main-content">
     <!-- Search Box -->
@@ -60,12 +147,75 @@
       </div>
       <button id="search-btn">Caută</button>
     </div>
-
+   
     <h2>Apartamente disponibile</h2>
     <div class="property-list" id="property-container">
       <!-- Listings injected here -->
     </div>
   </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <!-- Despre noi -->
+      <div class="footer-section">
+        <h3>Despre ImobiliareIasi.ro</h3>
+        <p>Suntem cea mai mare platformă de anunțuri imobiliare din Iași, oferind soluții complete pentru închirierea și vânzarea proprietăților.</p>
+        <p>Cu peste 10 ani de experiență, vă ajutăm să găsiți locuința perfectă.</p>
+      </div>
+
+      <!-- Linkuri utile -->
+      <div class="footer-section">
+        <h3>Linkuri utile</h3>
+        <ul>
+          <li><a href="imob.html">Pagina principală</a></li>
+          <li><a href="anunturi.html">Toate anunțurile</a></li>
+          <li><a href="../properties.php">Publică anunț</a></li>
+          <li><a href="#">Sfaturi imobiliare</a></li>
+          <li><a href="#">Termeni și condiții</a></li>
+          <li><a href="#">Politica de confidențialitate</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div class="footer-section">
+        <h3>Contact</h3>
+        <div class="contact-info">
+          <span>📍</span>
+          <span>Str. Ștefan cel Mare nr. 15, Iași</span>
+        </div>
+        <div class="contact-info">
+          <span>📞</span>
+          <span><a href="tel:+40232123456">+40 232 123 456</a></span>
+        </div>
+        <div class="contact-info">
+          <span>✉️</span>
+          <span><a href="mailto:contact@imobiliareiasi.ro">contact@imobiliareiasi.ro</a></span>
+        </div>
+        <div class="contact-info">
+          <span>🕒</span>
+          <span>L-V: 9:00 - 18:00, S: 9:00 - 14:00</span>
+        </div>
+      </div>
+
+      <!-- Rețele sociale -->
+      <div class="footer-section">
+        <h3>Urmărește-ne</h3>
+        <p>Rămâi la curent cu cele mai noi oferte și noutăți din piața imobiliară.</p>
+        <div class="social-links">
+          <a href="#" title="Facebook">f</a>
+          <a href="#" title="Instagram">📷</a>
+          <a href="#" title="LinkedIn">in</a>
+          <a href="#" title="YouTube">▶️</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2025 ImobiliareIasi.ro. Toate drepturile rezervate.</p>
+      <p>Dezvoltat cu ❤️ pentru comunitatea ieșeană</p>
+    </div>
+  </footer>
 
   <script src="script.js"></script>
 </body>
