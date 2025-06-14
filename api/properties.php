@@ -1,34 +1,63 @@
 <?php
 header('Content-Type: application/json');
+require_once __DIR__ . '/../config.php';
+$pdo = getPDO();
 
-$pdo = new PDO('mysql:host=localhost;dbname=real_estate', 'root', '');
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-$lat_min = isset($_GET['lat_min']) ? floatval($_GET['lat_min']) : null;
-$lat_max = isset($_GET['lat_max']) ? floatval($_GET['lat_max']) : null;
-$lng_min = isset($_GET['lng_min']) ? floatval($_GET['lng_min']) : null;
-$lng_max = isset($_GET['lng_max']) ? floatval($_GET['lng_max']) : null;
+// Filters from GET
+$trans  = $_GET['transaction']    ?? '';
+$ptype  = $_GET['property_type']  ?? '';
+$rooms  = $_GET['rooms']          ?? '';
+$price  = $_GET['price_max']      ?? '';
 
 // Build base SQL
-$sql = "SELECT * FROM properties";
-$params = [];
+$sql = "SELECT p.id, p.title, p.price, p.rooms,
+               COALESCE(pi.filename,'') AS image_file
+        FROM properties p
+        LEFT JOIN (
+          SELECT property_id, filename
+          FROM property_images
+          GROUP BY property_id
+        ) pi ON pi.property_id = p.id";
+$w = []; $pr = [];
 
-// If all four bounds are provided, add a WHERE clause
-if ($lat_min !== null && $lat_max !== null && $lng_min !== null && $lng_max !== null) {
-    $sql .= " WHERE latitude BETWEEN :lat_min AND :lat_max
-              AND longitude BETWEEN :lng_min AND :lng_max";
-    $params = [
-        ':lat_min' => $lat_min,
-        ':lat_max' => $lat_max,
-        ':lng_min' => $lng_min,
-        ':lng_max' => $lng_max
-    ];
+// Apply filters
+if ($trans) {
+  $w[] = "p.transaction_type = :trans";
+  $pr[':trans'] = $trans;
+}
+if ($ptype) {
+  $w[] = "p.property_type = :ptype";
+  $pr[':ptype'] = $ptype;
+}
+if ($rooms && $rooms !== 'toate') {
+  if ($rooms === '4+') {
+    $w[] = "p.rooms >= :rooms";
+    $pr[':rooms'] = 4;
+  } else {
+    $w[] = "p.rooms = :rooms";
+    $pr[':rooms'] = (int)$rooms;
+  }
+}
+if ($price !== '') {
+  $w[] = "p.price <= :price";
+  $pr[':price'] = (float)$price;
 }
 
-$sql .= " ORDER BY created_at DESC";
+if ($w) {
+  $sql .= ' WHERE ' . implode(' AND ', $w);
+}
+
 $stmt = $pdo->prepare($sql);
-$stmt->execute($params);
+$stmt->execute($pr);
+$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$properties = $stmt->fetchAll(PDO::FETCH_ASSOC);
-echo json_encode($properties);
+// Map each to include a full URL for the image
+$data = array_map(function($r){
+  $r['image_url'] = $r['image_file']
+    ? 'admin/uploads/' . $r['image_file']
+    : 'placeholder.jpg';
+  unset($r['image_file']);
+  return $r;
+}, $rows);
 
+echo json_encode($data);

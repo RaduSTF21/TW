@@ -18,7 +18,7 @@
   <div class="info" id="info"></div>
 
   <script>
-    // 1) Read `id` from URL
+
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
     if (!id) {
@@ -26,7 +26,7 @@
       throw new Error('Missing id');
     }
 
-    // 2) Fetch detail from API
+
     fetch(`api/property.php?id=${id}`)
       .then(res => res.json())
       .then(data => {
@@ -35,10 +35,9 @@
           return;
         }
         const p = data.property;
-        // 3) Populate title
+
         document.getElementById('title').textContent = p.title;
 
-        // 4) Populate images
         const imgContainer = document.getElementById('images');
         if (data.images.length) {
           data.images.forEach(img => {
@@ -51,7 +50,6 @@
           imgContainer.textContent = 'No images.';
         }
 
-        // 5) Populate info fields
         const info = document.getElementById('info');
         info.innerHTML = `
           <p><strong>Price:</strong> €${p.price}</p>

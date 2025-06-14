@@ -1,0 +1,54 @@
+.anunturi-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+.anunturi-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.anunt-item {
+  display: flex;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+.anunt-image img {
+  width: 200px;
+  height: auto;
+  object-fit: cover;
+}
+.anunt-info {
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.anunt-info h2 {
+  margin: 0 0 0.5rem;
+}
+.anunt-info .price {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.anunt-info .location {
+  color: #555;
+  margin-bottom: 0.5rem;
+}
+.anunt-info .snippet {
+  flex: 1;
+  margin-bottom: 1rem;
+}
+.anunt-info .btn {
+  align-self: flex-start;
+  padding: 0.5rem 1rem;
+  background: #007bfc;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 4px;
+}
+.anunt-info .btn:hover {
+  background: #005bb5;
+}

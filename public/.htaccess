@@ -1,0 +1,4 @@
+RewriteEngine On
+# redirect all to index.php except existing files
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [QSA,L]

@@ -1,27 +1,26 @@
 <?php
 // TW/setup.php
 
-// 1) Only run once via lock file
+
 if (file_exists(__DIR__ . '/setup.lock')) {
     echo "✅ Setup already completed.";
     exit;
 }
 
 try {
-    // 2) Connect to MySQL server (no DB yet)
     $pdo = new PDO('mysql:host=localhost', 'root', '');
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // 3) Create database if missing
+    
     $pdo->exec("
         CREATE DATABASE IF NOT EXISTS `real_estate`
         CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
     ");
 
-    // 4) Switch to real_estate
+    
     $pdo->exec("USE `real_estate`");
 
-    // 5) Create properties table
+    
     $pdo->exec("
       CREATE TABLE IF NOT EXISTS properties (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -37,7 +36,7 @@ try {
       ) ENGINE=InnoDB CHARACTER SET=utf8mb4
     ");
 
-    // 6) Create property_images table
+    
     $pdo->exec("
       CREATE TABLE IF NOT EXISTS property_images (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -49,7 +48,7 @@ try {
       ) ENGINE=InnoDB CHARACTER SET=utf8mb4
     ");
 
-    // 7) Create layers table
+    
     $pdo->exec("
       CREATE TABLE IF NOT EXISTS layers (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -58,7 +57,7 @@ try {
       ) ENGINE=InnoDB CHARACTER SET=utf8mb4
     ");
 
-    // 8) Create layer_data table
+    
     $pdo->exec("
       CREATE TABLE IF NOT EXISTS layer_data (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -69,8 +68,36 @@ try {
           REFERENCES layers(id) ON DELETE CASCADE
       ) ENGINE=InnoDB CHARACTER SET=utf8mb4
     ");
+    
+      $pdo->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('user','admin') NOT NULL DEFAULT 'user',
+    created_at DATETIME NOT NULL,
+    INDEX idx_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SQL
+    );
 
-    // 9) Write lock file
+$pdo->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS listings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    price DECIMAL(12,2) NOT NULL,
+    location VARCHAR(255),
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SQL
+    );
+
     file_put_contents(__DIR__ . '/setup.lock', 'done');
     echo "✅ Database & tables created successfully.";
 
