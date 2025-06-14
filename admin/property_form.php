@@ -16,7 +16,7 @@ csrf_validate();
 header('Content-Type: application/json');
 // Preia câmpuri
 $id = $_POST['id'] ?? null;
-title: $title = trim($_POST['title'] ?? '');
+$title = trim($_POST['title'] ?? '');
 $price = $_POST['price'] ?? '';
 $lat = $_POST['latitude'] ?? '';
 $lng = $_POST['longitude'] ?? '';$description = trim($_POST['description'] ?? '');
@@ -64,7 +64,7 @@ try {
         ]);
         $propertyId = $pdo->lastInsertId();
     }
-    // Gestionare facilități: presupune $_POST['facilities'] ca "1,2,3"
+
     if (!empty($_POST['facilities'])) {
         $facArr = array_filter(array_map('intval', explode(',', $_POST['facilities'])));
         // Șterge vechile legături

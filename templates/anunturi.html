@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Admin – Anunțuri</title>
-  <link rel="stylesheet" href="/assets/css/imob.css">
+  <link rel="stylesheet" href="/TW/assets/css/imob.css">
 </head>
 <body>
   <header>
@@ -53,8 +53,8 @@
                    : '-' ?>
             </td>
             <td>
-              <a href="/admin/anunt_form.php?id=<?= $anunt['id'] ?>">Editează</a> |
-              <a href="/admin/anunt_delete.php?id=<?= $anunt['id'] ?>"
+              <a href="/TW/admin/anunt_form.php?id=<?= $anunt['id'] ?>">Editează</a> |
+              <a href="/TW/admin/anunt_delete.php?id=<?= $anunt['id'] ?>"
                  onclick="return confirm('Sigur ștergi acest anunț?');">
                 Șterge
               </a>
@@ -65,7 +65,7 @@
       </table>
     <?php endif; ?>
 
-    <p><a href="/admin/anunt_form.php" class="btn">Adaugă un nou anunț</a></p>
+    <p><a href="/TW/admin/anunt_form.php" class="btn">Adaugă un nou anunț</a></p>
   </main>
 </body>
 </html>

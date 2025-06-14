@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/../bootstrap.php';
 require_once __DIR__ . '/../csrf.php';
-$pdo = getPDO();
+$stmt = $pdo->query('SELECT * FROM properties');
 
 // Filters from GET
 $trans  = $_GET['transaction']    ?? '';

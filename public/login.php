@@ -1,5 +1,4 @@
 <?php
-// File: admin/login.php
 require_once __DIR__ . '/../csrf.php';
 require_once __DIR__ . '/../bootstrap.php';
 session_start();
@@ -28,4 +27,3 @@ session_regenerate_id(true);
 $_SESSION['user_id'] = $user['id'];
 $_SESSION['user_role'] = $user['role'];
 echo json_encode(['success' => true]);
-?>
