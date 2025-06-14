@@ -1,95 +1,81 @@
 <?php
-namespace App\Service;
-
-use PDO;
-use PDOException;
-
+namespace App\service;
 
 class ListingService
 {
-    private PDO $pdo;
-
-    public function __construct(PDO $pdo)
+    // Fetch all transaction types
+    public static function getTransactionTypes(\PDO $pdo): array
     {
-        $this->pdo = $pdo;
+        $stmt = $pdo->query("SELECT id, name FROM transaction_types");
+        return $stmt->fetchAll();
     }
 
-    
-    public function create(int $userId, string $title, string $description, float $price, ?string $location): array
+    // Fetch all property types
+    public static function getPropertyTypes(\PDO $pdo): array
     {
-        try {
-            $stmt = $this->pdo->prepare(
-                'INSERT INTO listings (user_id, title, description, price, location, created_at) VALUES (:user_id, :title, :description, :price, :location, NOW())'
-            );
-            $result = $stmt->execute([
-                'user_id'    => $userId,
-                'title'      => $title,
-                'description'=> $description,
-                'price'      => $price,
-                'location'   => $location,
+        $stmt = $pdo->query("SELECT id, name FROM property_types");
+        return $stmt->fetchAll();
+    }
+
+    // Fetch all amenities
+    public static function getAmenities(\PDO $pdo): array
+    {
+        $stmt = $pdo->query("SELECT id, name FROM amenities");
+        return $stmt->fetchAll();
+    }
+
+    // Fetch all risks
+    public static function getRisks(\PDO $pdo): array
+    {
+        $stmt = $pdo->query("SELECT id, name FROM risks");
+        return $stmt->fetchAll();
+    }
+
+    // Save or update a property (inserting into pivot tables)
+    public static function saveProperty(\PDO $pdo, array $data, array $amenityIds, array $riskIds): int
+    {
+        // 1) Insert or update properties table, get $propertyId
+        if (empty($data['id'])) {
+            $sql = "INSERT INTO properties (title, description, price, rooms, transaction_type, property_type, latitude, longitude)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+              $data['title'], $data['description'], $data['price'],
+              $data['rooms'], $data['transaction_type'], $data['property_type'],
+              $data['latitude'], $data['longitude']
             ]);
-            if (!$result) {
-                return ['success' => false, 'listingId' => null, 'error' => 'Eroare la crearea anunțului.'];
-            }
-            return ['success' => true, 'listingId' => (int)$this->pdo->lastInsertId(), 'error' => null];
-        } catch (PDOException $e) {
-            return ['success' => false, 'listingId' => null, 'error' => $e->getMessage()];
-        }
-    }
-
-   
-    public function getAll(): array
-    {
-        $stmt = $this->pdo->query(
-            'SELECT l.id, l.user_id, u.name AS author, l.title, l.description, l.price, l.location, l.created_at, l.updated_at
-             FROM listings l
-             JOIN users u ON l.user_id = u.id
-             ORDER BY l.created_at DESC'
-        );
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
- 
-    public function getById(int $id): ?array
-    {
-        $stmt = $this->pdo->prepare(
-            'SELECT id, user_id, title, description, price, location, created_at, updated_at
-             FROM listings WHERE id = :id'
-        );
-        $stmt->execute(['id' => $id]);
-        $listing = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $listing ?: null;
-    }
-
-  
-    public function update(int $id, string $title, string $description, float $price, ?string $location): array
-    {
-        try {
-            $stmt = $this->pdo->prepare(
-                'UPDATE listings
-                 SET title = :title, description = :description, price = :price, location = :location, updated_at = NOW()
-                 WHERE id = :id'
-            );
-            $success = $stmt->execute([
-                'id'          => $id,
-                'title'       => $title,
-                'description' => $description,
-                'price'       => $price,
-                'location'    => $location,
+            $propertyId = $pdo->lastInsertId();
+        } else {
+            $sql = "UPDATE properties
+                    SET title = ?, description = ?, price = ?, rooms = ?, transaction_type = ?, property_type = ?, latitude = ?, longitude = ?
+                    WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+              $data['title'], $data['description'], $data['price'],
+              $data['rooms'], $data['transaction_type'], $data['property_type'],
+              $data['latitude'], $data['longitude'], $data['id']
             ]);
-            if (!$success) {
-                return ['success' => false, 'error' => 'Eroare la actualizarea anunțului.'];
-            }
-            return ['success' => true, 'error' => null];
-        } catch (PDOException $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
-        }
-    }
+            $propertyId = $data['id'];
 
-  
-    public function delete(int $id): bool
-    {
-        $stmt = $this->pdo->prepare('DELETE FROM listings WHERE id = :id');
-        return $stmt->execute(['id' => $id]);
+            // Clear out existing pivots
+            $pdo->prepare("DELETE FROM property_amenities WHERE property_id = ?")
+                ->execute([$propertyId]);
+            $pdo->prepare("DELETE FROM property_risks WHERE property_id = ?")
+                ->execute([$propertyId]);
+        }
+
+        // 2) Insert new amenity pivots
+        $stmtA = $pdo->prepare("INSERT INTO property_amenities (property_id, amenity_id) VALUES (?, ?)");
+        foreach ($amenityIds as $amenityId) {
+            $stmtA->execute([$propertyId, $amenityId]);
+        }
+
+        // 3) Insert new risk pivots
+        $stmtR = $pdo->prepare("INSERT INTO property_risks (property_id, risk_id) VALUES (?, ?)");
+        foreach ($riskIds as $riskId) {
+            $stmtR->execute([$propertyId, $riskId]);
+        }
+
+        return $propertyId;
     }
 }

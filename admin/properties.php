@@ -4,8 +4,8 @@ if (empty($_SESSION['logged_in'])) {
     header('Location: login.php');
     exit;
 }
-require_once __DIR__ . '/../config.php';
-$pdo = getPDO();
+require __DIR__ . '/../bootstrap.php';
+$stmt = $pdo->query('SELECT * FROM properties');
 
 // Fetch all properties
 $stmt = $pdo->query("SELECT id, title, price, created_at FROM properties ORDER BY created_at DESC");

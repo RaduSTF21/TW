@@ -1,16 +1,23 @@
 <?php
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'real_estate');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+use Dotenv\Dotenv;
 
-// Returns a PDO connection
-function getPDO() {
-    static $pdo;
-    if (!$pdo) {
-        $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
-        $pdo = new PDO($dsn, DB_USER, DB_PASS);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    }
-    return $pdo;
-}
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+$dotenv->load();
+
+return [
+  'db' => [
+    'driver'   => $_ENV['DB_DRIVER'],
+    'host'     => $_ENV['DB_HOST'],
+    'port'     => $_ENV['DB_PORT'],
+    'database' => $_ENV['DB_DATABASE'],
+    'username' => $_ENV['DB_USERNAME'],
+    'password' => $_ENV['DB_PASSWORD'],
+    'options'  => [
+      PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+      PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+      PDO::ATTR_EMULATE_PREPARES   => false,
+    ],
+  ],
+];

@@ -1,219 +1,194 @@
 <?php
-// TW/admin/property_form.php
+require __DIR__ . '/../bootstrap.php';
 session_start();
-if (empty($_SESSION['logged_in'])) {
+if (empty($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
 }
 
-require_once __DIR__ . '/../config.php';
-$pdo = getPDO();
+use App\service\ListingService;
 
-// Initialize variables
-$editing = false;
-$id = $_GET['id'] ?? null;
-$title = $description = '';
-$price = $rooms = $latitude = $longitude = '';
-$transaction_type = $property_type = '';
-$existingImages = [];
+$pdo = $GLOBALS['pdo'];
+$errors = [];
 
-// If editing, fetch existing record + images
-if ($id && ctype_digit($id)) {
-    $stmt = $pdo->prepare("SELECT * FROM properties WHERE id = :id");
-    $stmt->execute([':id' => $id]);
-    $prop = $stmt->fetch(PDO::FETCH_ASSOC);
-    if ($prop) {
-        $editing = true;
-        extract($prop); // populates $title, $description, $price, $rooms, etc.
+// Fetch lookups
+$transactions = ListingService::getTransactionTypes($pdo);
+$propTypes    = ListingService::getPropertyTypes($pdo);
+$amenities    = ListingService::getAmenities($pdo);
+$risks        = ListingService::getRisks($pdo);
 
-        // fetch images
-        $imgStmt = $pdo->prepare("
-          SELECT id, filename FROM property_images
-          WHERE property_id = :pid
-        ");
-        $imgStmt->execute([':pid' => $id]);
-        $existingImages = $imgStmt->fetchAll(PDO::FETCH_ASSOC);
+// Initialize form data
+$data = [
+  'id' => null,
+  'title' => '',
+  'description' => '',
+  'price' => '',
+  'rooms' => '',
+  'transaction_type' => '',
+  'property_type' => '',
+  'latitude' => '',
+  'longitude' => '',
+];
+$existingAmenityIds = [];
+$existingRiskIds    = [];
+$existingImages     = [];
+
+// If editing existing property
+if (!empty($_GET['id'])) {
+    $id = (int) $_GET['id'];
+    $stmt = $pdo->prepare("SELECT * FROM properties WHERE id = ?");
+    $stmt->execute([$id]);
+    $row = $stmt->fetch();
+    if ($row) {
+        $data = array_merge($data, $row);
+        // load pivots
+        $stmtA = $pdo->prepare("SELECT amenity_id FROM property_amenities WHERE property_id = ?");
+        $stmtA->execute([$id]);
+        $existingAmenityIds = array_column($stmtA->fetchAll(), 'amenity_id');
+        $stmtR = $pdo->prepare("SELECT risk_id FROM property_risks WHERE property_id = ?");
+        $stmtR->execute([$id]);
+        $existingRiskIds = array_column($stmtR->fetchAll(), 'risk_id');
+        // load existing images
+        $stmtI = $pdo->prepare("SELECT id, filename FROM property_images WHERE property_id = ?");
+        $stmtI->execute([$id]);
+        $existingImages = $stmtI->fetchAll();
     }
 }
 
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Sanitize inputs
-    $title            = trim($_POST['title']);
-    $description      = trim($_POST['description']);
-    $price            = floatval($_POST['price']);
-    $rooms            = ctype_digit($_POST['rooms'] ?? '') ? (int)$_POST['rooms'] : null;
-    $transaction_type = $_POST['transaction_type'] ?? '';
-    $property_type    = $_POST['property_type'] ?? '';
-    $latitude         = floatval($_POST['latitude']);
-    $longitude        = floatval($_POST['longitude']);
-
-    // Build SQL & params
-    if ($editing) {
-        $sql = "UPDATE properties SET
-                  title=:title,
-                  description=:description,
-                  price=:price,
-                  rooms=:rooms,
-                  transaction_type=:transaction_type,
-                  property_type=:property_type,
-                  latitude=:latitude,
-                  longitude=:longitude
-                WHERE id=:id";
-        $params = [
-            ':title'            => $title,
-            ':description'      => $description,
-            ':price'            => $price,
-            ':rooms'            => $rooms,
-            ':transaction_type' => $transaction_type,
-            ':property_type'    => $property_type,
-            ':latitude'         => $latitude,
-            ':longitude'        => $longitude,
-            ':id'               => $id
-        ];
-    } else {
-        $sql = "INSERT INTO properties
-                  (title, description, price, rooms, transaction_type, property_type, latitude, longitude)
-                VALUES
-                  (:title, :description, :price, :rooms, :transaction_type, :property_type, :latitude, :longitude)";
-        $params = [
-            ':title'            => $title,
-            ':description'      => $description,
-            ':price'            => $price,
-            ':rooms'            => $rooms,
-            ':transaction_type' => $transaction_type,
-            ':property_type'    => $property_type,
-            ':latitude'         => $latitude,
-            ':longitude'        => $longitude
-        ];
+    // Collect & sanitize
+    foreach (['title','description','price','rooms','transaction_type','property_type','latitude','longitude'] as $field) {
+        $data[$field] = trim($_POST[$field] ?? '');
     }
+    $amenityIds = $_POST['amenities'] ?? [];
+    $riskIds    = $_POST['risks']    ?? [];
 
-    // Execute save
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
+    // Basic validation
+    if (!$data['title'])   $errors[] = 'Titlu obligatoriu.';
+    if (!is_numeric($data['price'])) $errors[] = 'Prețul trebuie să fie numeric.';
+    if (!is_numeric($data['rooms'])) $errors[] = 'Numărul de camere trebuie să fie numeric.';
+    if (!$data['transaction_type']) $errors[] = 'Selectează tipul tranzacției.';
+    if (!$data['property_type'])    $errors[] = 'Selectează tipul proprietății.';
 
-    // Get the property ID for uploads
-    $propId = $editing ? $id : $pdo->lastInsertId();
-
-    // Handle image uploads
-    if (!empty($_FILES['images']) && $_FILES['images']['error'][0] !== UPLOAD_ERR_NO_FILE) {
-        $uploadDir = __DIR__ . '/uploads/';
-        foreach ($_FILES['images']['tmp_name'] as $i => $tmpPath) {
-            if ($_FILES['images']['error'][$i] === UPLOAD_ERR_OK) {
-                $origName = basename($_FILES['images']['name'][$i]);
-                $ext      = pathinfo($origName, PATHINFO_EXTENSION);
-                $newName  = uniqid('img_') . '.' . $ext;
-                $dest     = $uploadDir . $newName;
-                if (move_uploaded_file($tmpPath, $dest)) {
-                    $ins = $pdo->prepare("
-                      INSERT INTO property_images
-                        (property_id, filename, alt_text)
-                      VALUES
-                        (:pid, :fn, :alt)
-                    ");
-                    $ins->execute([
-                        ':pid' => $propId,
-                        ':fn'  => $newName,
-                        ':alt' => '' 
-                    ]);
+    if (empty($errors)) {
+        // Save via service
+        $propertyId = ListingService::saveProperty(
+            $pdo,
+            $data,
+            $amenityIds,
+            $riskIds
+        );
+        // Handle images
+        if (!empty($_FILES['images']['name'][0])) {
+            $uploadDir = __DIR__ . '/uploads/';
+            foreach ($_FILES['images']['tmp_name'] as $index => $tmp) {
+                $origName = $_FILES['images']['name'][$index];
+                $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+                if (in_array($ext, ['jpg','jpeg','png','gif'])) {
+                    $filename = uniqid('img_') . '.' . $ext;
+                    move_uploaded_file($tmp, $uploadDir . $filename);
+                    // insert record
+                    $stmtImg = $pdo->prepare("INSERT INTO property_images (property_id, filename) VALUES (?, ?)");
+                    $stmtImg->execute([$propertyId, $filename]);
                 }
             }
         }
+        header('Location: properties.php?success=1');
+        exit;
     }
-
-    // Redirect back to list
-    header('Location: properties.php');
-    exit;
 }
 ?>
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title><?= $editing ? 'Editează' : 'Adaugă' ?> Proprietate</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><?= $data['id'] ? 'Editează' : 'Adaugă' ?> anunț</title>
+  <link rel="stylesheet" href="../imob.css" />
 </head>
 <body>
-  <h1><?= $editing ? 'Editează' : 'Adaugă' ?> Proprietate</h1>
-  <form method="post" enctype="multipart/form-data">
-    <label>Title:<br>
-      <input name="title" value="<?= htmlspecialchars($title) ?>" required>
-    </label><br><br>
+  <!-- Header -->
+  <header>
+    <div class="logo">ImobiliareIasi.ro</div>
+  </header>
+  <!-- Navigation -->
+  <nav>
+    <a href="../imob.html">Acasă</a>
+    <a href="../anunturi.html">Anunțuri</a>
+    <a href="properties.php">Adaugă anunț</a>
+    <a href="#">Contact</a>
+  </nav>
 
-    <label>Description:<br>
-      <textarea name="description" rows="4"><?= htmlspecialchars($description) ?></textarea>
-    </label><br><br>
+  <div class="main-content">
+    <h1><?= $data['id'] ? 'Editează anunț' : 'Adaugă anunț' ?></h1>
 
-    <label>Price (€):<br>
-      <input name="price" type="number" step="0.01"
-             value="<?= htmlspecialchars($price) ?>" required>
-    </label><br><br>
-
-    <label>Rooms:<br>
-      <input name="rooms" type="number" min="1"
-             value="<?= htmlspecialchars($rooms) ?>">
-    </label><br><br>
-
-    <label>Tip tranzacție:<br>
-      <select name="transaction_type">
-        <option value="">— Selectați —</option>
-        <option value="inchiriere" <?= $transaction_type==='inchiriere'?'selected':'' ?>>
-          Închiriere
-        </option>
-        <option value="vanzare" <?= $transaction_type==='vanzare'?'selected':'' ?>>
-          Vânzare
-        </option>
-      </select>
-    </label><br><br>
-
-    <label>Tip proprietate:<br>
-      <select name="property_type">
-        <option value="">— Selectați —</option>
-        <option value="apartament" <?= $property_type==='apartament'?'selected':'' ?>>
-          Apartament
-        </option>
-        <option value="garsoniera" <?= $property_type==='garsoniera'?'selected':'' ?>>
-          Garsonieră
-        </option>
-        <option value="casa" <?= $property_type==='casa'?'selected':'' ?>>
-          Casă
-        </option>
-      </select>
-    </label><br><br>
-
-    <label>Latitude:<br>
-      <input name="latitude" type="text"
-             value="<?= htmlspecialchars($latitude) ?>">
-    </label><br><br>
-
-    <label>Longitude:<br>
-      <input name="longitude" type="text"
-             value="<?= htmlspecialchars($longitude) ?>">
-    </label><br><br>
-
-    <?php if ($editing && $existingImages): ?>
-      <fieldset>
-        <legend>Imagini existente</legend>
-        <?php foreach ($existingImages as $img): ?>
-          <div style="display:inline-block; margin:0 10px;">
-            <img src="uploads/<?= htmlspecialchars($img['filename']) ?>"
-                 style="height:80px; display:block;">
-            <a href="delete_image.php?id=<?= $img['id'] ?>&prop=<?= $id ?>"
-               onclick="return confirm('Șterge această imagine?')">
-              Șterge
-            </a>
-          </div>
-        <?php endforeach; ?>
-      </fieldset>
-      <br>
+    <?php if ($errors): ?>
+      <div class="errors">
+        <ul>
+          <?php foreach ($errors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?>
+        </ul>
+      </div>
     <?php endif; ?>
 
-    <label>Upload images:<br>
-      <input type="file" name="images[]" accept="image/*" multiple>
-    </label><br><br>
+    <form method="post" enctype="multipart/form-data">
+      <!-- Fields -->
+      <label>Titlu:<br>
+        <input name="title" value="<?= htmlspecialchars($data['title']) ?>" />
+      </label><br>
+      <label>Descriere:<br>
+        <textarea name="description"><?= htmlspecialchars($data['description']) ?></textarea>
+      </label><br>
+      <label>Preț (€):<br>
+        <input name="price" value="<?= htmlspecialchars($data['price']) ?>" />
+      </label><br>
+      <label>Camere:<br>
+        <input name="rooms" value="<?= htmlspecialchars($data['rooms']) ?>" />
+      </label><br>
+      <label>Tip tranzacție:<br>
+        <select name="transaction_type">
+          <option value="">Toate</option>
+          <?php foreach ($transactions as $t): ?>
+            <option value="<?= $t['id']?>" <?= $data['transaction_type']==$t['id']?'selected':''?>><?= htmlspecialchars($t['name']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </label><br>
+      <label>Tip proprietate:<br>
+        <select name="property_type">
+          <option value="">Toate</option>
+          <?php foreach ($propTypes as $pt): ?>
+            <option value="<?= $pt['id']?>" <?= $data['property_type']==$pt['id']?'selected':''?>><?= htmlspecialchars($pt['name']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </label><br>
+      <fieldset><legend>Facilități</legend>
+        <?php foreach ($amenities as $a): ?>
+          <label><input type="checkbox" name="amenities[]" value="<?= $a['id']?>" <?= in_array($a['id'],$existingAmenityIds)?'checked':''?> /> <?= htmlspecialchars($a['name'])?></label>
+        <?php endforeach; ?>
+      </fieldset><br>
+      <fieldset><legend>Riscuri</legend>
+        <?php foreach ($risks as $r): ?>
+          <label><input type="checkbox" name="risks[]" value="<?= $r['id']?>" <?= in_array($r['id'],$existingRiskIds)?'checked':''?> /> <?= htmlspecialchars($r['name'])?></label>
+        <?php endforeach; ?>
+      </fieldset><br>
 
-    <button type="submit"><?= $editing ? 'Salvează' : 'Creează' ?></button>
-    <a href="properties.php">Anulează</a>
-  </form>
+      <!-- Image Upload -->
+      <label>Imagini:<br>
+        <input type="file" name="images[]" multiple accept="image/*" />
+      </label><br>
+      <?php if ($existingImages): ?>
+        <div class="img-preview">
+          <?php foreach ($existingImages as $img): ?>
+            <div class="thumb">
+              <img src="uploads/<?= htmlspecialchars($img['filename']) ?>" alt="" />
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+
+      <button type="submit"><?= $data['id'] ? 'Actualizează' : 'Publică' ?></button>
+      <a href="properties.php">Anulează</a>
+    </form>
+  </div>
 </body>
 </html>
+

@@ -4,8 +4,8 @@ if (empty($_SESSION['logged_in'])) {
     header('Location: login.php');
     exit;
 }
-require_once __DIR__ . '/../config.php';
-$pdo = getPDO();
+require __DIR__ . '/../bootstrap.php';
+$stmt = $pdo->query('SELECT * FROM properties');
 
 if (isset($_GET['id']) && ctype_digit($_GET['id'])) {
     $stmt = $pdo->prepare("DELETE FROM properties WHERE id = :id");

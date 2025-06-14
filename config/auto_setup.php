@@ -1,5 +1,5 @@
 <?php
-// TW/setup.php
+
 
 
 if (file_exists(__DIR__ . '/setup.lock')) {
@@ -97,6 +97,90 @@ CREATE TABLE IF NOT EXISTS listings (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 SQL
     );
+
+    $pdo->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS transaction_types (
+  id   INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL UNIQUE
+) ENGINE=InnoDB CHARSET=utf8mb4;
+SQL
+);
+
+$pdo->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS property_types (
+  id   INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL UNIQUE
+) ENGINE=InnoDB CHARSET=utf8mb4;
+SQL
+);
+
+$pdo->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS amenities (
+  id   INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL UNIQUE
+) ENGINE=InnoDB CHARSET=utf8mb4;
+SQL
+);
+
+$pdo->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS property_amenities (
+  property_id INT NOT NULL,
+  amenity_id  INT NOT NULL,
+  PRIMARY KEY (property_id, amenity_id),
+  FOREIGN KEY (property_id) REFERENCES properties(id)   ON DELETE CASCADE,
+  FOREIGN KEY (amenity_id ) REFERENCES amenities(id)    ON DELETE CASCADE
+) ENGINE=InnoDB CHARSET=utf8mb4;
+SQL
+);
+
+$pdo->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS risks (
+  id   INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL UNIQUE
+) ENGINE=InnoDB CHARSET=utf8mb4;
+SQL
+);
+
+$pdo->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS property_risks (
+  property_id INT NOT NULL,
+  risk_id     INT NOT NULL,
+  PRIMARY KEY (property_id, risk_id),
+  FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
+  FOREIGN KEY (risk_id    ) REFERENCES risks(id)      ON DELETE CASCADE
+) ENGINE=InnoDB CHARSET=utf8mb4;
+SQL
+);
+
+
+$pdo->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS inquiries (
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  property_id  INT NOT NULL,
+  user_id      INT NULL,               -- nullable for guest inquiries
+  name         VARCHAR(100) NOT NULL,  -- if guest
+  email        VARCHAR(255) NOT NULL,
+  message      TEXT NOT NULL,
+  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id    ) REFERENCES users(id)      ON DELETE SET NULL
+) ENGINE=InnoDB CHARSET=utf8mb4;
+SQL
+);
+
+$pdo->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS favorites (
+  user_id     INT NOT NULL,
+  listing_id  INT NOT NULL,
+  saved_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, listing_id),
+  FOREIGN KEY (user_id    ) REFERENCES users(id)    ON DELETE CASCADE,
+  FOREIGN KEY (listing_id ) REFERENCES listings(id) ON DELETE CASCADE
+) ENGINE=InnoDB CHARSET=utf8mb4;
+SQL
+);
+
+
 
     file_put_contents(__DIR__ . '/setup.lock', 'done');
     echo "✅ Database & tables created successfully.";
