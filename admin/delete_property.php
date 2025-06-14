@@ -5,6 +5,8 @@ if (empty($_SESSION['logged_in'])) {
     exit;
 }
 require __DIR__ . '/../bootstrap.php';
+require_once __DIR__ . '/../csrf.php';
+csrf_validate();
 $stmt = $pdo->query('SELECT * FROM properties');
 
 if (isset($_GET['id']) && ctype_digit($_GET['id'])) {

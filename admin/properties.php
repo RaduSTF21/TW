@@ -1,10 +1,12 @@
 <?php
+require __DIR__ . '/../bootstrap.php';
+require_once __DIR__ . '/../csrf.php';
 session_start();
 if (empty($_SESSION['logged_in'])) {
     header('Location: login.php');
     exit;
 }
-require __DIR__ . '/../bootstrap.php';
+csrf_validate();
 $stmt = $pdo->query('SELECT * FROM properties');
 
 // Fetch all properties

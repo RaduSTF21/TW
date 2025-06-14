@@ -1,40 +1,31 @@
 <?php
+// File: admin/login.php
+require_once __DIR__ . '/../csrf.php';
+require_once __DIR__ . '/../bootstrap.php';
 session_start();
-// Hard-coded credentials
-define('ADMIN_USER', 'admin');
-define('ADMIN_PASS', 'password123');  // change this!
-
-// If already logged in, redirect
-if (!empty($_SESSION['logged_in'])) {
-    header('Location: index.php');
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    exit('Method Not Allowed');
+}
+csrf_validate();
+header('Content-Type: application/json');
+$username = trim($_POST['username'] ?? '');
+$password = $_POST['password'] ?? '';
+if ($username === '' || $password === '') {
+    http_response_code(400);
+    echo json_encode(['error' => 'Username și parolă necesare']);
     exit;
 }
-
-$error = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $u = $_POST['username'] ?? '';
-    $p = $_POST['password'] ?? '';
-    if ($u === ADMIN_USER && $p === ADMIN_PASS) {
-        $_SESSION['logged_in'] = true;
-        header('Location: index.php');
-        exit;
-    } else {
-        $error = 'Invalid credentials';
-    }
+$stmt = $pdo->prepare("SELECT id, password_hash, role FROM users WHERE username = :username");
+$stmt->execute(['username' => $username]);
+$user = $stmt->fetch();
+if (!$user || !password_verify($password, $user['password_hash'])) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Credențiale invalide']);
+    exit;
 }
+session_regenerate_id(true);
+$_SESSION['user_id'] = $user['id'];
+$_SESSION['user_role'] = $user['role'];
+echo json_encode(['success' => true]);
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"/><title>Admin Login</title></head>
-<body>
-  <h1>Admin Login</h1>
-  <?php if ($error): ?>
-    <p style="color:red;"><?= htmlspecialchars($error) ?></p>
-  <?php endif; ?>
-  <form method="post">
-    <label>Username: <input name="username" required></label><br>
-    <label>Password: <input name="password" type="password" required></label><br>
-    <button type="submit">Log In</button>
-  </form>
-</body>
-</html>

@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json');
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../bootstrap.php';
+require_once __DIR__ . '/../csrf.php';
 $pdo = getPDO();
 
 // Filters from GET
