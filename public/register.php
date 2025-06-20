@@ -1,73 +1,85 @@
 <?php
-// public/register.php
+// DEBUG VERSION of register.php
 
-require_once __DIR__ . '/../bootstrap.php';
-if (session_status() === PHP_SESSION_NONE) session_start();
+// 1) Enable HTML errors temporarily so we can capture them
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
+// 2) Bootstrap & session
+require __DIR__ . '/../bootstrap.php';
+session_start();
+
+// 3) Bring PDO into scope
+$pdo = $GLOBALS['pdo'] ?? null;
+
+// 4) Always respond JSON
 header('Content-Type: application/json; charset=utf-8');
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['error' => 'Method Not Allowed']);
-    exit;
-}
-
-// Validare CSRF
-$token = $_POST['csrf_token'] ?? '';
-if (empty($token) || !verify_csrf_token($token)) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Invalid CSRF token']);
-    exit;
-}
-
-// Preia date din formular
-$name = trim($_POST['username'] ?? '');
-$email = trim($_POST['email'] ?? '');
-$password = $_POST['password'] ?? '';
-$confirm  = $_POST['confirm_password'] ?? '';
-
-$errors = [];
-if ($name === '') {
-    $errors[] = 'Nume utilizator necesar';
-}
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    $errors[] = 'Email invalid';
-}
-if (strlen($password) < 6) {
-    $errors[] = 'Parolă prea scurtă';
-}
-if ($password !== $confirm) {
-    $errors[] = 'Parolele nu se potrivesc';
-}
-if ($errors) {
-    http_response_code(400);
-    echo json_encode(['errors' => $errors]);
-    exit;
-}
 
 try {
-    $pdo = get_db_connection();
-    // Verifică unicitate pe name sau email
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE `name` = ? OR email = ?');
-    $stmt->execute([$name, $email]);
-    if ($stmt->fetchColumn() > 0) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Nume utilizator sau email deja folosit']);
-        exit;
+    // 5) Only allow POST
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        throw new Exception('Metodă nepermisă');
     }
-    // Inserează: coloanele name, email, password_hash și created_at cu NOW()
+
+    // 6) Decode JSON payload
+    $raw = file_get_contents('php://input');
+    $input = json_decode($raw, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        http_response_code(400);
+        throw new Exception('JSON invalid: ' . json_last_error_msg());
+    }
+
+    // 7) CSRF validation
+    if (
+        empty($input['csrf_token']) ||
+        empty($_SESSION['csrf_token']) ||
+        !hash_equals($_SESSION['csrf_token'], $input['csrf_token'])
+    ) {
+        http_response_code(400);
+        throw new Exception('Token CSRF invalid');
+    }
+
+    // 8) Validate fields
+    $name             = $input['username']        ?? '';
+    $email            = $input['email']           ?? '';
+    $password         = $input['password']        ?? '';
+    $confirm_password = $input['confirm_password'] ?? '';
+
+    $errors = [];
+    if (trim($name) === '')                            $errors[] = 'Username este obligatoriu.';
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL))     $errors[] = 'Email invalid.';
+    if (strlen($password) < 6)                         $errors[] = 'Parola trebuie ≥ 6 caractere.';
+    if ($password !== $confirm_password)               $errors[] = 'Parolele nu se potrivesc.';
+
+    if ($errors) {
+        http_response_code(422);
+        throw new Exception(implode(' ', $errors));
+    }
+
+    // 9) Insert into DB
     $hash = password_hash($password, PASSWORD_DEFAULT);
+    if (!$pdo) {
+        throw new Exception('PDO instance is null');
+    }
     $stmt = $pdo->prepare(
-        'INSERT INTO users (`name`, email, password_hash, created_at) VALUES (?, ?, ?, NOW())'
+       'INSERT INTO users (name, email, password_hash, created_at)
+        VALUES (?, ?, ?, NOW())'
     );
     $stmt->execute([$name, $email, $hash]);
-    $userId = $pdo->lastInsertId();
-    // Autentificare automată
-    session_regenerate_id(true);
-    $_SESSION['user_id'] = $userId;
-    $_SESSION['user_role'] = 'user';
-    http_response_code(201);
-    echo json_encode(['success' => true, 'user_id' => $userId]);
+
+    // 10) Rotate CSRF token on success
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+    // 11) Success response
+    echo json_encode(['user_id' => $pdo->lastInsertId()]);
+    exit;
+
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+    // Return the exception message as JSON for debugging
+    $code = http_response_code() ?: 500;
+    http_response_code($code);
+    echo json_encode(['error' => $e->getMessage()]);
+    exit;
 }

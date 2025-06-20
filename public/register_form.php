@@ -1,76 +1,105 @@
 <?php
 // public/register_form.php
-require_once __DIR__ . '/../bootstrap.php';
-if (session_status() === PHP_SESSION_NONE) session_start();
-$csrfToken = $_SESSION['csrf_token'];
-?>
-<!DOCTYPE html>
+require __DIR__ . '/../bootstrap.php';
+session_start();             // ← ADD THIS
+
+// Generate CSRF token
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+?><!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Înregistrare</title>
-  <link rel="stylesheet" href="/TW/assets/css/imob.css">
-  <style>
-    .error { color: red; }
-    .success { color: green; }
-    form { max-width: 400px; margin: auto; }
-    label { display: block; margin-bottom: 0.5rem; }
-    input { width: 100%; padding: 0.5rem; margin-bottom: 1rem; }
-    button { padding: 0.5rem 1rem; }
-    #message { margin-bottom: 1rem; }
-  </style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ImobiliareIasi.ro – Înregistrare</title>
+  <link rel="stylesheet" href="../assets/css/imob.css"/>
 </head>
 <body>
-  <h1>Înregistrare</h1>
-  <div id="message"></div>
-  <form id="registerForm" action="register.php" method="post">
-    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
-    <label>Nume utilizator:
-      <input type="text" name="username" required>
-    </label>
-    <label>Email:
-      <input type="email" name="email" required>
-    </label>
-    <label>Parolă:
-      <input type="password" name="password" required minlength="6">
-    </label>
-    <label>Confirmă parola:
-      <input type="password" name="confirm_password" required minlength="6">
-    </label>
-    <button type="submit">Înregistrează-te</button>
-  </form>
+  <!-- Header -->
+  <header>
+    <div class="logo">ImobiliareIasi.ro</div>
+  </header>
+
+  <!-- Navigation -->
+  <nav>
+    <a href="imob.php">Acasă</a>
+    <a href="anunturi.php">Anunțuri</a>
+    <a href="register_form.php" class="active">Înregistrare</a>
+    <a href="login.php">Autentificare</a>
+    <a href="#">Contact</a>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="search-box" style="max-width:400px; margin:auto;">
+      <h2>Crează-ți cont</h2>
+
+      <form id="register-form">
+        <input type="hidden" name="csrf_token"
+               value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+
+        <div class="filter-row" style="flex-direction:column;">
+          <div class="filter-item">
+            <label for="username">Username:</label>
+            <input id="username" name="username" type="text" required>
+          </div>
+          <div class="filter-item">
+            <label for="email">Email:</label>
+            <input id="email" name="email" type="email" required>
+          </div>
+          <div class="filter-item">
+            <label for="password">Parolă:</label>
+            <input id="password" name="password" type="password" required>
+          </div>
+          <div class="filter-item">
+            <label for="password_confirm">Confirmă parola:</label>
+            <input id="password_confirm" name="confirm_password" type="password" required>
+          </div>
+        </div>
+
+        <button type="submit">Înregistrează-te</button>
+        <div id="error-msg" style="color:red; margin-top:10px;"></div>
+      </form>
+    </div>
+  </div>
 
   <script>
-  document.getElementById('registerForm').addEventListener('submit', async function(e) {
+  document.getElementById('register-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const form = e.target;
-    const messageDiv = document.getElementById('message');
-    messageDiv.innerHTML = '';
-    const formData = new FormData(form);
+    const data = {
+      username: form.username.value.trim(),
+      email: form.email.value.trim(),
+      password: form.password.value,
+      confirm_password: form.confirm_password.value,
+      csrf_token: form.csrf_token.value
+    };
+
+    // Client‑side confirm check
+    if (data.password !== data.confirm_password) {
+      return document.getElementById('error-msg').innerText = 'Parolele nu se potrivesc.';
+    }
+
+    // Explicit relative path with leading ./
+    const resp = await fetch('./register.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    let json;
     try {
-      const resp = await fetch(form.action, {
-        method: 'POST',
-        body: formData,
-        credentials: 'same-origin'
-      });
-      const data = await resp.json();
-      if (!resp.ok) {
-        if (data.errors) {
-          data.errors.forEach(err => {
-            const p = document.createElement('p'); p.textContent = err; p.className = 'error'; messageDiv.appendChild(p);
-          });
-        } else if (data.error) {
-          const p = document.createElement('p'); p.textContent = data.error; p.className = 'error'; messageDiv.appendChild(p);
-        } else {
-          const p = document.createElement('p'); p.textContent = 'Eroare neașteptată'; p.className = 'error'; messageDiv.appendChild(p);
-        }
-      } else {
-        const p = document.createElement('p'); p.textContent = 'Înregistrare reușită!'; p.className = 'success'; messageDiv.appendChild(p);
-        setTimeout(() => window.location.href = 'login_form.php', 1500);
-      }
+      json = await resp.json();
     } catch (err) {
-      const p = document.createElement('p'); p.textContent = 'Eroare rețea: ' + err.message; p.className = 'error'; messageDiv.appendChild(p);
+      console.error('Invalid JSON response', await resp.text());
+      return document.getElementById('error-msg').innerText = 'Răspuns server invalid.';
+    }
+
+    if (!resp.ok) {
+      document.getElementById('error-msg').innerText = json.error;
+    } else {
+      window.location = 'login.php?registered=1';
     }
   });
   </script>

@@ -1,13 +1,9 @@
-// File: assets/js/imob.js
-
 document.addEventListener('DOMContentLoaded', () => {
-  const container  = document.getElementById('properties-container');
+  const container = document.getElementById('properties-container');
   const messageDiv = document.getElementById('message');
-  const applyBtn   = document.getElementById('btnApplyFilters');
-  const locateBtn  = document.getElementById('btnLocate');
-  const seeAllBtn  = document.getElementById('btnSeeAll');
-
-  const API_PATH = 'api/properties.php';
+  const applyBtn = document.getElementById('btnApplyFilters');
+  const locateBtn = document.getElementById('btnLocate');
+  const API_PATH = '/TW/public/api/properties.php';
 
   async function fetchProperties(filters = {}) {
     const params = new URLSearchParams();
@@ -42,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (p.image_url) {
         const img = document.createElement('img');
-        img.src = p.image_url;
+        img.src = `/TW/public/image.php?id=${encodeURIComponent(p.id)}`;
         img.alt = p.title || 'Proprietate';
         img.loading = 'lazy';
         card.appendChild(img);
@@ -63,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const link = document.createElement('a');
-      link.href = `detail.php?id=${encodeURIComponent(p.id)}`;
+      link.href = `/TW/public/detail.php?id=${encodeURIComponent(p.id)}`;
       link.textContent = 'Vezi detaliu';
       card.appendChild(link);
 
@@ -71,15 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Initial load: only 3 items
-  fetchProperties({ limit: 3 });
-
   applyBtn.addEventListener('click', () => {
     const filters = {
       transaction: document.getElementById('filterTransaction').value,
-      price_max:   document.getElementById('filterPriceMax').value,
-      rooms_min:   document.getElementById('filterRoomsMin').value,
-      limit:       3
+      price_max: document.getElementById('filterPriceMax').value,
+      rooms_min: document.getElementById('filterRoomsMin').value
     };
     fetchProperties(filters);
   });
@@ -91,17 +83,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     navigator.geolocation.getCurrentPosition(pos => {
       const filters = {
-        lat:    pos.coords.latitude,
-        lng:    pos.coords.longitude,
-        radius: 5,
-        limit:  3
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        radius: 5
       };
       messageDiv.textContent = 'Căut proprietăți în apropiere...';
       fetchProperties(filters);
     }, err => alert('Eroare geolocație: ' + err.message));
   });
 
-  seeAllBtn.addEventListener('click', () => {
-    window.location.href = 'anunturi.php';
-  });
+  // Initial load
+  fetchProperties({});
 });

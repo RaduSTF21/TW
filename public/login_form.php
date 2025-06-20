@@ -1,8 +1,9 @@
 <?php
-// public/login_form.php
-require_once __DIR__ . '/../bootstrap.php';
-if (session_status() === PHP_SESSION_NONE) session_start();
-$csrfToken = $_SESSION['csrf_token'];
+session_start();
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf = $_SESSION['csrf_token'];
 ?>
 <!DOCTYPE html>
 <html lang="ro">
@@ -12,47 +13,77 @@ $csrfToken = $_SESSION['csrf_token'];
   <title>Login</title>
   <link rel="stylesheet" href="/assets/css/imob.css">
   <style>
-    .error { color: red; }
-    .success { color: green; }
-    .login-container { max-width: 400px; margin: auto; }
-    label { display: block; margin-bottom: 0.5rem; }
-    input { width: 100%; padding: 0.5rem; margin-bottom: 1rem; }
-    button { padding: 0.5rem 1rem; }
-    #message { margin-bottom: 1rem; }
+    body { display: flex; justify-content: center; align-items: center; height: 100vh; }
+    .login-container {
+      background: #fff;
+      padding: 2rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .login-container h1 { text-align: center; margin-bottom: 1rem; }
+    .login-container label { display: block; margin-bottom: 0.5rem; }
+    .login-container input { width: 100%; padding: 0.5rem; margin-bottom: 1rem; }
+    .login-container button { width: 100%; padding: 0.5rem; }
+    .error { color: red; margin-bottom: 1rem; }
+    .success { color: green; margin-bottom: 1rem; }
   </style>
 </head>
 <body>
   <div class="login-container">
-    <h1>Login</h1>
+    <h1>Autentificare</h1>
     <div id="message"></div>
     <form id="loginForm" action="login.php" method="post">
-      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
-      <label>Nume utilizator:
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>">
+      <label>
+        Username:
         <input type="text" name="username" required>
       </label>
-      <label>Parolă:
+      <label>
+        Parolă:
         <input type="password" name="password" required>
       </label>
       <button type="submit">Login</button>
     </form>
   </div>
+
   <script>
   document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    const messageDiv = document.getElementById('message'); messageDiv.innerHTML = '';
-    const formData = new FormData(e.target);
+    const form = e.target;
+    const messageDiv = document.getElementById('message');
+    messageDiv.innerHTML = '';
+    const formData = new FormData(form);
+
     try {
-      const resp = await fetch(e.target.action, { method: 'POST', body: formData, credentials: 'same-origin' });
+      const resp = await fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin'
+      });
       const data = await resp.json();
+
       if (!resp.ok) {
-        const errMsg = data.error || 'Eroare neașteptată';
-        const p = document.createElement('p'); p.textContent = errMsg; p.className='error'; messageDiv.appendChild(p);
+        const p = document.createElement('p');
+        p.textContent = data.error || 'Eroare neașteptată.';
+        p.className = 'error';
+        messageDiv.appendChild(p);
       } else {
-        const p = document.createElement('p'); p.textContent = 'Login reușit!'; p.className='success'; messageDiv.appendChild(p);
-        setTimeout(() => window.location.href = 'imob.php', 1000);
+        const p = document.createElement('p');
+        p.textContent = 'Login reușit! Redirecționare...';
+        p.className = 'success';
+        messageDiv.appendChild(p);
+        setTimeout(() => {
+          window.location.href = 'imob.php';
+        }, 1000);
       }
-    } catch(err) {
-      const p = document.createElement('p'); p.textContent = 'Eroare rețea: ' + err.message; p.className='error'; messageDiv.appendChild(p);
+    } catch (err) {
+      const p = document.createElement('p');
+      p.textContent = 'Eroare de rețea: ' + err.message;
+      p.className = 'error';
+      messageDiv.appendChild(p);
     }
   });
   </script>
