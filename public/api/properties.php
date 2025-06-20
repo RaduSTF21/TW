@@ -1,64 +1,59 @@
 <?php
-header('Content-Type: application/json');
-require_once __DIR__ . '/../bootstrap.php';
-require_once __DIR__ . '/../csrf.php';
-$stmt = $pdo->query('SELECT * FROM properties');
+// File: public/api/properties.php
 
-// Filters from GET
-$trans  = $_GET['transaction']    ?? '';
-$ptype  = $_GET['property_type']  ?? '';
-$rooms  = $_GET['rooms']          ?? '';
-$price  = $_GET['price_max']      ?? '';
+require_once __DIR__ . '/../../config/db.php'; // Adjust path if needed
 
-// Build base SQL
-$sql = "SELECT p.id, p.title, p.price, p.rooms,
-               COALESCE(pi.filename,'') AS image_file
-        FROM properties p
-        LEFT JOIN (
-          SELECT property_id, filename
-          FROM property_images
-          GROUP BY property_id
-        ) pi ON pi.property_id = p.id";
-$w = []; $pr = [];
+// Build WHERE clauses from filters
+$where   = [];
+$params  = [];
+
+if (!empty($_GET['transaction'])) {
+    $where[]           = 'transaction_type = :transaction';
+    $params[':transaction'] = $_GET['transaction'];
+}
+if (!empty($_GET['property_type'])) {
+    $where[]              = 'property_type = :ptype';
+    $params[':ptype']     = $_GET['property_type'];
+}
+if (isset($_GET['price_max']) && is_numeric($_GET['price_max'])) {
+    $where[]                  = 'price <= :price_max';
+    $params[':price_max']     = $_GET['price_max'];
+}
+if (isset($_GET['rooms_min']) && is_numeric($_GET['rooms_min'])) {
+    $where[]                  = 'rooms >= :rooms_min';
+    $params[':rooms_min']     = $_GET['rooms_min'];
+}
+
+// Base query
+$sql = "SELECT id, title, price, rooms, transaction_type, property_type, created_at
+        FROM properties";
 
 // Apply filters
-if ($trans) {
-  $w[] = "p.transaction_type = :trans";
-  $pr[':trans'] = $trans;
-}
-if ($ptype) {
-  $w[] = "p.property_type = :ptype";
-  $pr[':ptype'] = $ptype;
-}
-if ($rooms && $rooms !== 'toate') {
-  if ($rooms === '4+') {
-    $w[] = "p.rooms >= :rooms";
-    $pr[':rooms'] = 4;
-  } else {
-    $w[] = "p.rooms = :rooms";
-    $pr[':rooms'] = (int)$rooms;
-  }
-}
-if ($price !== '') {
-  $w[] = "p.price <= :price";
-  $pr[':price'] = (float)$price;
+if ($where) {
+    $sql .= ' WHERE ' . implode(' AND ', $where);
 }
 
-if ($w) {
-  $sql .= ' WHERE ' . implode(' AND ', $w);
+// Newest first
+$sql .= ' ORDER BY created_at DESC';
+
+// Apply limit if given
+if (isset($_GET['limit']) && is_numeric($_GET['limit'])) {
+    $sql .= ' LIMIT :limit';
 }
 
-$stmt = $pdo->prepare($sql);
-$stmt->execute($pr);
-$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$stmt = $conn->prepare($sql);
 
-// Map each to include a full URL for the image
-$data = array_map(function($r){
-  $r['image_url'] = $r['image_file']
-    ? 'admin/uploads/' . $r['image_file']
-    : 'placeholder.jpg';
-  unset($r['image_file']);
-  return $r;
-}, $rows);
+// Bind filter params
+foreach ($params as $key => $val) {
+    $stmt->bindValue($key, $val);
+}
+// Bind limit as integer
+if (isset($_GET['limit']) && is_numeric($_GET['limit'])) {
+    $stmt->bindValue(':limit', (int)$_GET['limit'], PDO::PARAM_INT);
+}
 
-echo json_encode($data);
+$stmt->execute();
+$listings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+header('Content-Type: application/json');
+echo json_encode($listings);

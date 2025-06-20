@@ -1,91 +1,170 @@
 <?php
-require_once __DIR__ . '/../csrf.php';
+// public/adauga_anunt.php
 
+require_once __DIR__ . '/../bootstrap.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$pdo = get_db_connection();
 
-// Require login
-if (empty($_SESSION['user_id'])) {
-    header('Location: login_form.php');
+function json_response($data, $status = 200) {
+    http_response_code($status);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($data);
     exit;
 }
 
-// Get CSRF token (csrf.php will start the session if needed)
-$csrf = csrf_get_token();
+$action = $_GET['action'] ?? '';
 
-// If you’re redirecting back to this form on errors, you can pull them from session:
-$errors = $_SESSION['form_errors'] ?? [];
-$old    = $_SESSION['form_old']    ?? [];
-unset($_SESSION['form_errors'], $_SESSION['form_old']);
-?>
-<!DOCTYPE html>
-<html lang="ro">
-<head>
-  <meta charset="UTF-8">
-  <title>Adaugă Anunț</title>
-  <link rel="stylesheet" href="/TW/assets/css/imob.css">
-</head>
-<body>
-  <header><h1>Adaugă Anunț</h1></header>
-  <nav>
-    <a href="imob.php">Acasă</a> |
-    <a href="anunturi.php">Anunțuri</a> |
-    <a href="logout.php">Logout</a>
-  </nav>
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    if ($action === 'get_csrf') {
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+        json_response(['csrf_token' => $_SESSION['csrf_token']]);
+    }
+    if ($action === 'options') {
+        try {
+            // 1. transaction_types
+            $stmt = $pdo->query('SELECT id, name FROM transaction_types ORDER BY name');
+            $transaction_types = $stmt->fetchAll();
+            // 2. property_types
+            $stmt = $pdo->query('SELECT id, name FROM property_types ORDER BY name');
+            $property_types = $stmt->fetchAll();
+            // 3. amenities
+            $stmt = $pdo->query('SELECT id, name FROM amenities ORDER BY name');
+            $amenities = $stmt->fetchAll();
+            // 4. risks
+            $stmt = $pdo->query('SELECT id, name FROM risks ORDER BY name');
+            $risks = $stmt->fetchAll();
 
-  <main>
-    <?php if ($errors): ?>
-      <div class="error"><ul>
-        <?php foreach ($errors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?>
-      </ul></div>
-    <?php endif; ?>
+            json_response([
+                'transaction_types' => $transaction_types,
+                'property_types'    => $property_types,
+                'amenities'         => $amenities,
+                'risks'             => $risks
+            ]);
+        } catch (Exception $e) {
+            json_response(['error' => 'Eroare la încărcare opțiuni: ' . $e->getMessage()], 500);
+        }
+    }
+    http_response_code(400);
+    echo 'Bad Request';
+    exit;
+}
 
-    <form action="adauga_anunt.php" method="post" enctype="multipart/form-data">
-      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf, ENT_QUOTES) ?>">
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'submit') {
+    // Validare CSRF
+    $token = $_POST['csrf_token'] ?? '';
+    if (empty($token) || !verify_csrf_token($token)) {
+        json_response(['error' => 'Invalid CSRF token'], 403);
+    }
+    // Verificare autentificare
+    if (empty($_SESSION['user_id'])) {
+        json_response(['error' => 'Autentificare necesară'], 401);
+    }
+    $user_id = (int)$_SESSION['user_id'];
 
-      <label>
-        Titlu:
-        <input type="text" name="title" required
-               value="<?= htmlspecialchars($old['title'] ?? '', ENT_QUOTES) ?>">
-      </label><br>
+    // Preluare și validare câmpuri
+    $title = trim($_POST['title'] ?? '');
+    $description = trim($_POST['description'] ?? '');
+    $price = $_POST['price'] ?? '';
+    $rooms = $_POST['rooms'] ?? '';
+    $transaction_type = trim($_POST['transaction_type'] ?? '');
+    $property_type = trim($_POST['property_type'] ?? '');
+    $latitude = $_POST['latitude'] ?? '';
+    $longitude = $_POST['longitude'] ?? '';
+    $amenities = $_POST['amenities'] ?? [];
+    $risks = $_POST['risks'] ?? [];
 
-      <label>
-        Descriere:
-        <textarea name="description" rows="5" required><?= htmlspecialchars($old['description'] ?? '') ?></textarea>
-      </label><br>
+    $errors = [];
+    if ($title === '') { $errors[] = 'Titlu necesar'; }
+    if (!is_numeric($price) || $price < 0) { $errors[] = 'Preț invalid'; }
+    if (!is_numeric($rooms) || $rooms < 0) { $errors[] = 'Număr camere invalid'; }
+    if ($transaction_type === '') { $errors[] = 'Tip tranzacție necesar'; }
+    if ($property_type === '') { $errors[] = 'Tip proprietate necesar'; }
+    if ($latitude !== '' && !is_numeric($latitude)) { $errors[] = 'Latitude invalid'; }
+    if ($longitude !== '' && !is_numeric($longitude)) { $errors[] = 'Longitude invalid'; }
+    if (!is_array($amenities)) { $amenities = []; }
+    foreach ($amenities as $am_id) {
+        if (!is_numeric($am_id)) { $errors[] = 'ID Amenity invalid'; break; }
+    }
+    if (!is_array($risks)) { $risks = []; }
+    foreach ($risks as $rk_id) {
+        if (!is_numeric($rk_id)) { $errors[] = 'ID Risk invalid'; break; }
+    }
+    if ($errors) {
+        json_response(['errors' => $errors], 400);
+    }
 
-      <label>
-        Preț (€):
-        <input type="number" step="0.01" name="price" required
-               value="<?= htmlspecialchars($old['price'] ?? '', ENT_QUOTES) ?>">
-      </label><br>
+    try {
+        $pdo->beginTransaction();
+        // Insert în tabela properties
+        $sql = 'INSERT INTO properties 
+            (user_id, title, description, price, rooms, transaction_type, property_type, latitude, longitude)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            $user_id,
+            $title,
+            $description,
+            $price,
+            $rooms,
+            $transaction_type,
+            $property_type,
+            $latitude !== '' ? $latitude : null,
+            $longitude !== '' ? $longitude : null
+        ]);
+        $property_id = $pdo->lastInsertId();
 
-      <label>
-        Camere:
-        <input type="number" name="rooms" required
-               value="<?= htmlspecialchars($old['rooms'] ?? '', ENT_QUOTES) ?>">
-      </label><br>
+        // Insert amenities
+        if (!empty($amenities)) {
+            $stmtAm = $pdo->prepare('INSERT INTO property_amenities (property_id, amenity_id) VALUES (?, ?)');
+            foreach ($amenities as $am_id) {
+                $stmtAm->execute([$property_id, (int)$am_id]);
+            }
+        }
+        // Insert risks
+        if (!empty($risks)) {
+            $stmtRk = $pdo->prepare('INSERT INTO property_risks (property_id, risk_id) VALUES (?, ?)');
+            foreach ($risks as $rk_id) {
+                $stmtRk->execute([$property_id, (int)$rk_id]);
+            }
+        }
+        // Upload imagini
+        if (!empty($_FILES['images'])) {
+            $uploadDir = __DIR__ . '/uploads';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            foreach ($_FILES['images']['error'] as $idx => $error) {
+                if ($error === UPLOAD_ERR_OK) {
+                    $tmp = $_FILES['images']['tmp_name'][$idx];
+                    $finfo = new finfo(FILEINFO_MIME_TYPE);
+                    $mime = $finfo->file($tmp);
+                    $allowed = ['image/jpeg'=>'jpg', 'image/png'=>'png'];
+                    if (!isset($allowed[$mime])) continue;
+                    $ext = $allowed[$mime];
+                    $newName = bin2hex(random_bytes(16)) . ".$ext";
+                    $dest = $uploadDir . '/' . $newName;
+                    if (move_uploaded_file($tmp, $dest)) {
+                        $stmtImg = $pdo->prepare(
+                            'INSERT INTO property_images (property_id, filename, alt_text) VALUES (?, ?, ?)'
+                        );
+                        $stmtImg->execute([$property_id, $newName, '']);
+                    }
+                }
+            }
+        }
+        $pdo->commit();
+        // Răspuns JSON pentru succes
+        json_response(['success' => true, 'property_id' => $property_id]);
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        json_response(['error' => 'Database error: ' . $e->getMessage()], 500);
+    }
+}
 
-      <label>
-        Tip tranzacție:
-        <select name="transaction" required>
-          <option value="">Alege...</option>
-          <option value="sale" <?= isset($old['transaction']) && $old['transaction']==='sale' ? 'selected' : '' ?>>Vânzare</option>
-          <option value="rent" <?= isset($old['transaction']) && $old['transaction']==='rent' ? 'selected' : '' ?>>Închiriere</option>
-        </select>
-      </label><br>
-
-      <label>
-        Tip proprietate:
-        <input type="text" name="property_type" required
-               value="<?= htmlspecialchars($old['property_type'] ?? '', ENT_QUOTES) ?>">
-      </label><br>
-
-      <label>
-        Imagine:
-        <input type="file" name="image" accept="image/*">
-      </label><br>
-
-      <button type="submit">Adaugă Anunț</button>
-    </form>
-  </main>
-</body>
-</html>
+http_response_code(400);
+echo 'Bad Request';
+exit;
