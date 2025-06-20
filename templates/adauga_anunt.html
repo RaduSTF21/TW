@@ -1,34 +1,102 @@
+@ -1,34 +1,101 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
   <meta charset="UTF-8">
-  <title>Adaugă Anunț</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adaugă Anunț Complet</title>
+  <!-- CSS din public/assets/css/imob.css -->
   <link rel="stylesheet" href="/TW/assets/css/imob.css">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 1rem; }
+    form { max-width: 700px; margin: auto; }
+    fieldset { margin-bottom: 1.5rem; padding: 1rem; border: 1px solid #ccc; }
+    legend { font-weight: bold; }
+    label { display: block; margin-bottom: 0.5rem; }
+    input[type="text"], input[type="number"], input[type="file"],
+    select, textarea {
+      width: 100%; padding: 0.5rem; margin-bottom: 1rem;
+    }
+    .checkbox-group label {
+      display: inline-block; margin-right: 1rem;
+    }
+    button { padding: 0.7rem 1.5rem; font-size: 1rem; }
+    .error { color: red; }
+    .success { color: green; }
+  </style>
 </head>
 <body>
   <h1>Adaugă Anunț</h1>
-  <?php if ($errors): ?>
-    <div class="error"><ul>
-      <?php foreach ($errors as $e): ?><li><?= $e ?></li><?php endforeach; ?>
-    </ul></div>
-  <?php endif; ?>
+  <div id="message"></div>
+  <form id="anuntForm" action="/TW/public/adauga_anunt.php?action=submit" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" id="csrf_token">
 
-  <form method="post" enctype="multipart/form-data">
-    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf) ?>">
-    <label>Titlu: <input name="title" required value="<?= sanitize($_POST['title'] ?? '') ?>"></label><br>
-    <label>Descriere: <textarea name="description" required><?= sanitize($_POST['description'] ?? '') ?></textarea></label><br>
-    <label>Preț (€): <input type="number" step="0.01" name="price" required value="<?= sanitize($_POST['price'] ?? '') ?>"></label><br>
-    <label>Camere: <input type="number" name="rooms" required value="<?= sanitize($_POST['rooms'] ?? '') ?>"></label><br>
-    <label>Tip tranzacție:
-      <select name="transaction" required>
-        <option value="">Alege...</option>
-        <option value="sale"<?= (($_POST['transaction'] ?? '')==='sale')?' selected':'' ?>>Vânzare</option>
-        <option value="rent"<?= (($_POST['transaction'] ?? '')==='rent')?' selected':'' ?>>Închiriere</option>
-      </select>
-    </label><br>
-    <label>Tip proprietate: <input name="property_type" required value="<?= sanitize($_POST['property_type'] ?? '') ?>"></label><br>
-    <label>Imagine: <input type="file" name="image" accept="image/*"></label><br>
-    <button type="submit">Adaugă Anunț</button>
+    <fieldset>
+      <legend>Detalii Proprietate</legend>
+      <label>
+        Titlu:
+        <input type="text" name="title" required maxlength="255">
+      </label>
+      <label>
+        Descriere:
+        <textarea name="description" required rows="4"></textarea>
+      </label>
+      <label>
+        Preț:
+        <input type="number" name="price" required step="0.01" min="0">
+      </label>
+      <label>
+        Număr camere:
+        <input type="number" name="rooms" required min="0">
+      </label>
+      <label>
+        Tip tranzacție:
+        <select name="transaction_type" id="transaction_type" required>
+          <option value="">-- alege tip tranzacție --</option>
+        </select>
+      </label>
+      <label>
+        Tip proprietate:
+        <select name="property_type" id="property_type" required>
+          <option value="">-- alege tip proprietate --</option>
+        </select>
+      </label>
+      <label>
+        Lățime geografică (latitude):
+        <input type="text" name="latitude" placeholder="ex: 47.1585">
+      </label>
+      <label>
+        Longitudine:
+        <input type="text" name="longitude" placeholder="ex: 27.6014">
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Facilități (Amenities)</legend>
+      <div id="amenitiesContainer" class="checkbox-group">
+        <p>Se încarcă facilități...</p>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Riscuri (Risks)</legend>
+      <div id="risksContainer" class="checkbox-group">
+        <p>Se încarcă riscuri...</p>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Imagini</legend>
+      <label>
+        Alege una sau mai multe imagini:
+        <input type="file" name="images[]" accept="image/jpeg,image/png" multiple>
+      </label>
+    </fieldset>
+
+    <button type="submit">Trimite Anunț</button>
   </form>
+
+  <!-- Include scriptul JS -->
+  <script src="/TW/assets/js/adauga_anunt.js"></script>
 </body>
 </html>

@@ -1,7 +1,9 @@
+@ -1,89 +1,73 @@
 <?php
-require_once __DIR__ . '/../csrf.php';
-require_once __DIR__ . '/../bootstrap.php';
+// File: public/imob.php
 
+require_once __DIR__ . '/init.php';
+require_once __DIR__ . '/../csrf.php';
 
 $csrfToken = csrf_get_token();
 ?>
@@ -10,7 +12,7 @@ $csrfToken = csrf_get_token();
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Imobiliare - Apartamente de închiriat</title>
+  <title>ImobiliareIasi.ro – Apartamente de închiriat</title>
   <link rel="stylesheet" href="/TW/assets/css/imob.css" />
 </head>
 <body>
@@ -18,10 +20,15 @@ $csrfToken = csrf_get_token();
     <div class="logo">ImobiliareIasi.ro</div>
   </header>
   <nav>
-    <a href="/TW/public/imob.php">Acasă</a>
-    <a href="/TW/public/anunturi.php">Anunțuri</a>
-    <a href="/TW/public/login_form.php">Login</a>
-    <a href="/TW/public/register_form.php">Înregistrare</a>
+    <a href="imob.php">Acasă</a>
+    <a href="anunturi.php">Anunțuri</a>
+    <?php if ($isLoggedIn): ?>
+      <a href="/TW/templates/adauga_anunt.html">Adaugă Anunț</a>
+      <a href="logout.php">Logout</a>
+    <?php else: ?>
+      <a href="login_form.php">Login</a>
+      <a href="register_form.php">Înregistrare</a>
+    <?php endif; ?>
   </nav>
 
   <main class="main-content">
@@ -51,39 +58,17 @@ $csrfToken = csrf_get_token();
     <button id="btnLocate" type="button">Arată proprietăți aproape de mine</button>
 
     <div id="properties-container" class="properties-grid"></div>
+
+    <div class="see-all">
+      <button id="btnSeeAll" type="button">Vezi toate anunțurile</button>
+    </div>
   </main>
 
   <footer>
-    <div class="footer-section">
-      <h3>Despre noi</h3>
-      <p>ImobiliareIasi.ro – locale, actualizate, ușor de folosit.</p>
-    </div>
-    <div class="footer-section">
-      <h3>Contact</h3>
-      <div class="contact-info">
-        <i class="fa fa-map-marker"></i><span>Iași, România</span>
-      </div>
-      <div class="contact-info">
-        <i class="fa fa-phone"></i><span>+40 123 456 789</span>
-      </div>
-      <div class="contact-info">
-        <i class="fa fa-envelope"></i><span>contact@imobiliareiasi.ro</span>
-      </div>
-    </div>
-    <div class="footer-section">
-      <h3>Urmărește-ne</h3>
-      <div class="social-links">
-        <a href="#" title="Facebook">f</a>
-        <a href="#" title="Instagram">i</a>
-        <a href="#" title="LinkedIn">in</a>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>&copy; 2025 ImobiliareIasi.ro. Toate drepturile rezervate.</p>
-    </div>
+    <!-- existing footer markup -->
   </footer>
 
-  <!-- External JS -->
+  <!-- Your external JS -->
   <script src="/TW/assets/js/imob.js"></script>
 </body>
 </html>
