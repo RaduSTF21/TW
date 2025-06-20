@@ -21,20 +21,28 @@ try {
     $pdo->exec("USE `real_estate`");
 
     
-    $pdo->exec("
-      CREATE TABLE IF NOT EXISTS properties (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        description TEXT,
-        price DECIMAL(12,2) NOT NULL DEFAULT 0,
-        rooms TINYINT UNSIGNED,
-        transaction_type VARCHAR(20),
-        property_type VARCHAR(20),
-        latitude DECIMAL(9,6),
-        longitude DECIMAL(9,6),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      ) ENGINE=InnoDB CHARACTER SET=utf8mb4
-    ");
+   $pdo->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS `properties` (
+    `id`               INT            UNSIGNED NOT NULL AUTO_INCREMENT,
+    `user_id`          INT            UNSIGNED NOT NULL,
+    `title`            VARCHAR(255)   NOT NULL,
+    `description`      TEXT           NOT NULL,
+    `price`            DECIMAL(12,2)  NOT NULL DEFAULT 0,
+    `rooms`            TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    `transaction_type` ENUM('sale','rent') NOT NULL,
+    `property_type`    VARCHAR(100)   NOT NULL,
+    `image_data`       LONGBLOB       NULL,
+    `image_mime`       VARCHAR(50)    NULL,
+    `latitude`         DECIMAL(9,6)   NULL,
+    `longitude`        DECIMAL(9,6)   NULL,
+    `created_at`       TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_user` (`user_id`),
+    CONSTRAINT `fk_properties_user`
+      FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SQL
+    );
 
     
     $pdo->exec("
@@ -69,15 +77,15 @@ try {
       ) ENGINE=InnoDB CHARACTER SET=utf8mb4
     ");
     
-      $pdo->exec(<<<'SQL'
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    role ENUM('user','admin') NOT NULL DEFAULT 'user',
-    created_at DATETIME NOT NULL,
-    INDEX idx_email (email)
+       $pdo->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS `users` (
+    `id`            INT AUTO_INCREMENT PRIMARY KEY,
+    `name`          VARCHAR(100)   NOT NULL,
+    `email`         VARCHAR(255)   NOT NULL UNIQUE,
+    `password_hash` VARCHAR(255)   NOT NULL,
+    `role`          ENUM('user','admin') NOT NULL DEFAULT 'user',
+    `created_at`    DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 SQL
     );

@@ -3,7 +3,7 @@ require __DIR__ . '/../bootstrap.php';
 require_once __DIR__ . '/../csrf.php';
 session_start();
 if (empty($_SESSION['logged_in'])) {
-    header('Location: login.php');
+    header('Location: /TW/public/login.php');
     exit;
 }
 csrf_validate();

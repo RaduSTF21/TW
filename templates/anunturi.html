@@ -53,8 +53,8 @@
                    : '-' ?>
             </td>
             <td>
-              <a href="/TW/admin/anunt_form.php?id=<?= $anunt['id'] ?>">Editează</a> |
-              <a href="/TW/admin/anunt_delete.php?id=<?= $anunt['id'] ?>"
+              <a href="/TW/public/adauga_anunt.php?id=<?= $anunt['id'] ?>">Editează</a> |
+              <a href="/TW/public/anunt_delete.php?id=<?= $anunt['id'] ?>"
                  onclick="return confirm('Sigur ștergi acest anunț?');">
                 Șterge
               </a>
@@ -65,7 +65,7 @@
       </table>
     <?php endif; ?>
 
-    <p><a href="/TW/admin/anunt_form.php" class="btn">Adaugă un nou anunț</a></p>
+    <p><a href="/TW/public/adauga_anunt.php" class="btn">Adaugă un nou anunț</a></p>
   </main>
 </body>
 </html>

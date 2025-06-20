@@ -1,8 +1,9 @@
 <?php
-require_once __DIR__ . '/../csrf.php';
 session_start();
-// Generăm token CSRF
-$csrfToken = csrf_get_token();
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf = $_SESSION['csrf_token'];
 ?>
 <!DOCTYPE html>
 <html lang="ro">
@@ -10,10 +11,8 @@ $csrfToken = csrf_get_token();
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Login</title>
-  <!-- Folosește același CSS ca landing page -->
   <link rel="stylesheet" href="/assets/css/imob.css">
   <style>
-    /* Ajustează după nevoie */
     body { display: flex; justify-content: center; align-items: center; height: 100vh; }
     .login-container {
       background: #fff;
@@ -36,8 +35,8 @@ $csrfToken = csrf_get_token();
   <div class="login-container">
     <h1>Autentificare</h1>
     <div id="message"></div>
-    <form id="loginForm" action="/public/login.php" method="post">
-      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
+    <form id="loginForm" action="login.php" method="post">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>">
       <label>
         Username:
         <input type="text" name="username" required>
@@ -57,6 +56,7 @@ $csrfToken = csrf_get_token();
     const messageDiv = document.getElementById('message');
     messageDiv.innerHTML = '';
     const formData = new FormData(form);
+
     try {
       const resp = await fetch(form.action, {
         method: 'POST',
@@ -64,27 +64,19 @@ $csrfToken = csrf_get_token();
         credentials: 'same-origin'
       });
       const data = await resp.json();
+
       if (!resp.ok) {
-        // Afișează erori
-        if (data.error) {
-          const p = document.createElement('p');
-          p.textContent = data.error;
-          p.className = 'error';
-          messageDiv.appendChild(p);
-        } else {
-          const p = document.createElement('p');
-          p.textContent = 'Eroare neașteptată.';
-          p.className = 'error';
-          messageDiv.appendChild(p);
-        }
+        const p = document.createElement('p');
+        p.textContent = data.error || 'Eroare neașteptată.';
+        p.className = 'error';
+        messageDiv.appendChild(p);
       } else {
-        // Succes: redirecționează
         const p = document.createElement('p');
         p.textContent = 'Login reușit! Redirecționare...';
         p.className = 'success';
         messageDiv.appendChild(p);
         setTimeout(() => {
-          window.location.href = '/public/imob.php'; // sau dashboard
+          window.location.href = 'imob.php';
         }, 1000);
       }
     } catch (err) {

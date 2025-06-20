@@ -78,4 +78,11 @@ class ListingService
 
         return $propertyId;
     }
+
+    public static function getAll(\PDO $pdo): array
+    {
+        $stmt = $pdo->query("SELECT * FROM properties");
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
 }

@@ -1,12 +1,12 @@
 {
-    "name": "radu/real-estate-manager",
-    "description": "Real Estate Manager TW project",
-    "require": {
-        "vlucas/phpdotenv": "^5.6"
-    },
-    "autoload": {
-        "psr-4": {
-            "App\\": "Src/"
-        }
+  "name": "radu/real-estate-manager",
+  "description": "Real Estate Manager TW project",
+  "require": {
+    "vlucas/phpdotenv": "^5.6"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
     }
+  }
 }
