@@ -1,73 +1,117 @@
+// admin/assets/js/script.js
+
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('property-container');
   const searchBtn = document.getElementById('search-btn');
 
-  // Fetch & render listings
-  function loadProperties(filters = {}) {
-    container.innerHTML = '<p>Loading…</p>';
-    const qs = new URLSearchParams(filters).toString();
-    fetch(`api/properties.php${qs ? '?' + qs : ''}`)
-      .then(res => {
-        if (!res.ok) throw new Error(res.status);
-        return res.json();
-      })
-      .then(data => {
-        container.innerHTML = '';
-        if (!data.length) {
-          container.innerHTML = '<p>Niciun rezultat găsit.</p>';
-          return;
-        }
-        data.forEach(p => container.appendChild(createCard(p)));
-      })
-      .catch(err => {
-        console.error('Error loading properties:', err);
-        container.innerHTML = '<p style="color:red;">Eroare la încărcarea anunțurilor.</p>';
-      });
+  // Turn the container into a grid
+  container.classList.add('properties-grid');
+
+  // Gather filter controls
+  const transactionSelect = document.getElementById('transaction-type');
+  const propertyTypeSelect = document.getElementById('property-type');
+  const roomsSelect = document.getElementById('rooms');
+  const priceInput = document.getElementById('price');
+
+  // Your API endpoint
+  const API_URL = '/TW/public/api/properties.php';
+
+  // Fetch & render with current filters
+  async function loadProperties() {
+    const params = new URLSearchParams();
+    if (transactionSelect.value)   params.append('transaction',   transactionSelect.value);
+    if (propertyTypeSelect.value)  params.append('property_type', propertyTypeSelect.value);
+    if (roomsSelect.value)         params.append('rooms_min',      roomsSelect.value);
+    if (priceInput.value)          params.append('price_max',      priceInput.value);
+
+    try {
+      const res = await fetch(`${API_URL}?${params}`, { credentials: 'same-origin' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const listings = await res.json();
+      renderProperties(listings);
+    } catch (err) {
+      console.error('Error loading properties:', err);
+      container.innerHTML = '<p class="error">Nu s-au putut încărca proprietățile.</p>';
+    }
   }
 
-  // Build a card element
-  function createCard(p) {
-    const card = document.createElement('div');
-    card.className = 'property-card';
+  function renderProperties(listings) {
+    container.innerHTML = '';
+    if (!Array.isArray(listings) || listings.length === 0) {
+      container.innerHTML = '<p>Nu există proprietăți de afișat.</p>';
+      return;
+    }
 
-    // Image
-    const img = document.createElement('img');
-    img.className = 'property-image';
-    img.src = p.image_url || 'placeholder.jpg';
-    img.alt = p.title;
+    listings.forEach(item => {
+      // Card wrapper
+      const card = document.createElement('div');
+      card.className = 'property-card';
 
-    // Info container
-    const info = document.createElement('div');
-    info.className = 'property-info';
+      // 1) Image section
+      const imgWrap = document.createElement('div');
+      imgWrap.className = 'property-image';
+      if (item.image) {
+        const img = document.createElement('img');
+        img.src     = `/TW/public/uploads/${encodeURIComponent(item.image)}`;
+        img.alt     = item.title;
+        img.loading = 'lazy';
+        imgWrap.appendChild(img);
+      } else {
+        imgWrap.textContent = 'Fără imagine';
+      }
+      card.appendChild(imgWrap);
 
-    const title = document.createElement('h3');
-    title.textContent = p.title;
+      // 2) Info section
+      const info = document.createElement('div');
+      info.className = 'property-info';
 
-    const price = document.createElement('div');
-    price.className = 'price';
-    price.textContent = `€${p.price}`;
+      // Title
+      const h3 = document.createElement('h3');
+      h3.textContent = item.title;
+      info.appendChild(h3);
 
-    const btn = document.createElement('a');
-    btn.className = 'details-btn';
-    btn.href = `detail.html?id=${p.id}`;
-    btn.textContent = 'Detalii';
+      // Price
+      const pPrice = document.createElement('p');
+      pPrice.className = 'price';
+      pPrice.textContent = `€${formatPrice(item.price)}`;
+      info.appendChild(pPrice);
 
-    info.append(title, price, btn);
-    card.append(img, info);
-    return card;
+      // Snippet (first 100 chars of description)
+      const pSnip = document.createElement('p');
+      pSnip.className = 'snippet';
+      pSnip.textContent = item.description
+        ? item.description.slice(0, 100) + (item.description.length > 100 ? '…' : '')
+        : '';
+      info.appendChild(pSnip);
+
+      // Details button
+      const detailsLink = document.createElement('a');
+      detailsLink.className = 'btn-details';
+      detailsLink.href      = `detail.php?id=${encodeURIComponent(item.id)}`;
+      detailsLink.textContent = 'Vezi detalii';
+      info.appendChild(detailsLink);
+
+      card.appendChild(info);
+
+      container.appendChild(card);
+    });
   }
 
-  // On click “Caută”
-  searchBtn.addEventListener('click', () => {
-    const filters = {
-      transaction: document.getElementById('transaction-type').value,
-      property_type: document.getElementById('property-type').value,
-      rooms: document.getElementById('rooms').value,
-      price_max: document.getElementById('price').value
-    };
-    loadProperties(filters);
+  function formatPrice(val) {
+    const num = parseFloat(val);
+    if (isNaN(num)) return val;
+    return num.toLocaleString('ro-RO', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  // Search button
+  searchBtn.addEventListener('click', e => {
+    e.preventDefault();
+    loadProperties();
   });
 
-  // Initial load: all listings
+  // Initial load
   loadProperties();
 });

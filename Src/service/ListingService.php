@@ -85,4 +85,32 @@ class ListingService
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+     public static function getById(\PDO $pdo, int $id): ?array
+    {
+        $stmt = $pdo->prepare(
+            'SELECT id, title, description, price, latitude, longitude
+               FROM properties
+              WHERE id = ?'
+        );
+        $stmt->execute([$id]);
+        $property = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $property ?: null;
+    }
+
+    /**
+     * Fetch all images for a given property_id, in order.
+     * Returns an array of ['filename'=>…, 'alt_text'=>…] entries.
+     */
+    public static function getImages(\PDO $pdo, int $propertyId): array
+    {
+        $stmt = $pdo->prepare(
+            'SELECT filename, alt_text
+               FROM property_images
+              WHERE property_id = ?
+           ORDER BY id'
+        );
+        $stmt->execute([$propertyId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
 }

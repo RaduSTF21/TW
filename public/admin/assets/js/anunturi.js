@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card.appendChild(pDate);
 
       const detailsLink = document.createElement('a');
-      detailsLink.href = `/TW/public/detaliu_anunt.php?id=${encodeURIComponent(item.id)}`;
+      detailsLink.href = `detail.php?id=${encodeURIComponent(item.id)}`;
       detailsLink.className = 'details-btn';
       detailsLink.textContent = 'Vezi detalii';
       card.appendChild(detailsLink);

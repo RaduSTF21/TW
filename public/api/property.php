@@ -1,38 +1,35 @@
 <?php
-header('Content-Type: application/json');
-$pdo = new PDO('mysql:host=localhost;dbname=real_estate', 'root', '');
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+// public/api/property.php
 
-// 1) Get & validate `id` from query
-if (!isset($_GET['id']) || !ctype_digit($_GET['id'])) {
+require_once __DIR__ . '/../../bootstrap.php';
+require_once __DIR__ . '/../../src/service/ListingService.php';
+
+header('Content-Type: application/json; charset=utf-8');
+
+$pdo = get_db_connection();
+
+$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+if (!$id) {
     http_response_code(400);
-    echo json_encode(['error' => 'Invalid or missing property ID']);
+    echo json_encode(['error' => 'Property ID is required']);
     exit;
 }
-$id = (int)$_GET['id'];
 
-// 2) Fetch property
-$stmt = $pdo->prepare("SELECT * FROM properties WHERE id = :id");
-$stmt->execute([':id' => $id]);
-$property = $stmt->fetch(PDO::FETCH_ASSOC);
+use App\service\ListingService;
 
-if (!$property) {
+// 1) Fetch the property
+$prop = ListingService::getById($pdo, $id);
+if (!$prop) {
     http_response_code(404);
     echo json_encode(['error' => 'Property not found']);
     exit;
 }
 
-// 3) Fetch images
-$stmt2 = $pdo->prepare("
-    SELECT filename, alt_text
-    FROM property_images
-    WHERE property_id = :id
-");
-$stmt2->execute([':id' => $id]);
-$images = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+// 2) Fetch its images
+$images = ListingService::getImages($pdo, $id);
 
-// 4) Return combined JSON
+// 3) Return JSON
 echo json_encode([
-    'property' => $property,
+    'property' => $prop,
     'images'   => $images
 ]);

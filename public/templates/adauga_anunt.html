@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Adaugă Anunț Complet</title>
-  <!-- CSS din public/assets/css/imob.css -->
-  <link rel="stylesheet" href="/TW/assets/css/imob.css">
+  <link rel="stylesheet" href="admin/assets/css/imob.css">
   <style>
     body { font-family: Arial, sans-serif; padding: 1rem; }
     form { max-width: 700px; margin: auto; }
@@ -13,12 +12,9 @@
     legend { font-weight: bold; }
     label { display: block; margin-bottom: 0.5rem; }
     input[type="text"], input[type="number"], input[type="file"],
-    select, textarea {
-      width: 100%; padding: 0.5rem; margin-bottom: 1rem;
-    }
-    .checkbox-group label {
-      display: inline-block; margin-right: 1rem;
-    }
+    select, textarea { width: 100%; padding: 0.5rem; margin-bottom: 1rem; }
+    .checkbox-group label { display: inline-block; margin-right: 1rem; }
+    #btnUseLocation { margin-bottom: 1rem; }
     button { padding: 0.7rem 1.5rem; font-size: 1rem; }
     .error { color: red; }
     .success { color: green; }
@@ -41,7 +37,7 @@
         <textarea name="description" required rows="4"></textarea>
       </label>
       <label>
-        Preț:
+        Preț (€):
         <input type="number" name="price" required step="0.01" min="0">
       </label>
       <label>
@@ -62,12 +58,13 @@
       </label>
       <label>
         Lățime geografică (latitude):
-        <input type="text" name="latitude" placeholder="ex: 47.1585">
+        <input type="text" name="latitude" id="latitude" placeholder="ex: 47.1585">
       </label>
       <label>
         Longitudine:
-        <input type="text" name="longitude" placeholder="ex: 27.6014">
+        <input type="text" name="longitude" id="longitude" placeholder="ex: 27.6014">
       </label>
+      <button type="button" id="btnUseLocation">Folosește poziția mea</button>
     </fieldset>
 
     <fieldset>
@@ -95,7 +92,6 @@
     <button type="submit">Trimite Anunț</button>
   </form>
 
-  <!-- Include scriptul JS -->
-  <script src="../admin/assets/js/adauga_anunt.js"></script>
+  <script src="/TW/public/admin/assets/js/adauga_anunt.js"></script>
 </body>
 </html>

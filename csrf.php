@@ -1,4 +1,3 @@
-@ -1,40 +1,20 @@
 <?php
 // csrf.php
 if (session_status() === PHP_SESSION_NONE) {

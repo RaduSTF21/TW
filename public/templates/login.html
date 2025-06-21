@@ -1,72 +1,32 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Login - Imobiliare Iași</title>
-      <link rel="stylesheet" href="../admin/assets/css/login.css" />
-
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Login - Imobiliare Iași</title>
+  <link rel="stylesheet" href="../admin/assets/css/login.css"/>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <h1>Login Administrator</h1>
-            <p>ImobiliareIasi.ro</p>
-            <a href="imob.html" class="back-btn">
-                ← Înapoi la pagina principală
-            </a>
-        </div>
-        
-        <form class="login-form" action="admin/uploads/login_process.php" method="POST">
-            <div class="form-group">
-                <label for="username">Nume utilizator:</label>
-                <input type="text" id="username" name="username" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="password">Parolă:</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            
-            <button type="submit" class="login-btn">Autentificare</button>
-            
-            <div class="forgot-password">
-                <a href="#">Ai uitat parola?</a>
-            </div>
-            
-            <div class="register-link">
-                Nu ai cont? <a href="register_form.php">Înregistrează-te</a>
-            </div>
-        </form>
+  <div class="login-container">
+    <div class="login-header">
+      <h1>Login</h1>
+      <p>ImobiliareIasi.ro</p>
+      <a href="imob.php" class="back-btn">← Înapoi la pagina principală</a>
     </div>
 
-    <script>
-        // Add some interactive feedback
-        document.addEventListener('DOMContentLoaded', function() {
-            const inputs = document.querySelectorAll('input');
-            
-            inputs.forEach(input => {
-                input.addEventListener('focus', function() {
-                    this.parentElement.style.transform = 'translateY(-2px)';
-                });
-                
-                input.addEventListener('blur', function() {
-                    this.parentElement.style.transform = 'translateY(0)';
-                });
-            });
-            
-            // Form validation
-            const form = document.querySelector('.login-form');
-            form.addEventListener('submit', function(e) {
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                
-                if (!username || !password) {
-                    e.preventDefault();
-                    alert('Te rog să completezi toate câmpurile!');
-                }
-            });
-        });
-    </script>
+    <form class="login-form" action="../login.php" method="POST">
+      <div class="form-group">
+        <label for="username">Nume utilizator:</label>
+        <input type="text" id="username" name="username" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Parolă:</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+
+      <button type="submit" class="login-btn">Autentificare</button>
+    </form>
+  </div>
 </body>
 </html>

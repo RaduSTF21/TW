@@ -4,7 +4,6 @@ namespace App\Service;
 use PDO;
 use Exception;
 
-
 class UserService
 {
     private PDO $pdo;
@@ -14,7 +13,6 @@ class UserService
         $this->pdo = $pdo;
     }
 
-    
     public function register(string $email, string $password, string $name): array
     {
         // check if email already exists
@@ -48,7 +46,6 @@ class UserService
         return ['success' => true, 'userId' => (int)$this->pdo->lastInsertId(), 'error' => null];
     }
 
-  
     public function authenticate(string $email, string $password): array
     {
         $stmt = $this->pdo->prepare('SELECT id, name, email, password_hash, role FROM users WHERE email = :email');
@@ -67,21 +64,47 @@ class UserService
         return ['success' => true, 'user' => $user, 'error' => null];
     }
 
-
     public function getAllUsers(): array
     {
         $stmt = $this->pdo->query('SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC');
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-   
-    public function getUserById(int $id): ?array
+    public function getUserById(int $id): ?object
     {
         $stmt = $this->pdo->prepare('SELECT id, name, email, role, created_at FROM users WHERE id = :id');
         $stmt->execute(['id' => $id]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        $user = $stmt->fetch(PDO::FETCH_OBJ);
         return $user ?: null;
     }
+
+    /**
+     * Update user properties (name, email, and optionally password)
+     */
+    public function updateUser(int $id, array $data): bool
+    {
+        $fields = [];
+        $params = ['id' => $id];
+
+        if (isset($data['name'])) {
+            $fields[] = 'name = :name';
+            $params['name'] = $data['name'];
+        }
+        if (isset($data['email'])) {
+            $fields[] = 'email = :email';
+            $params['email'] = $data['email'];
+        }
+        if (isset($data['password']) && $data['password'] !== '') {
+            $fields[] = 'password_hash = :password_hash';
+            $params['password_hash'] = password_hash($data['password'], PASSWORD_DEFAULT);
+        }
+
+        if (empty($fields)) {
+            return false;
+        }
+
+        $sql = 'UPDATE users SET ' . implode(', ', $fields) . ' WHERE id = :id';
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute($params);
+    }
 }
-
-

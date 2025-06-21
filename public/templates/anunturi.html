@@ -1,66 +1,108 @@
-
 <!DOCTYPE html>
 <html lang="ro">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Admin – Anunțuri</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anunțuri Imobiliare</title>
   <link rel="stylesheet" href="admin/assets/css/imob.css">
+  <link rel="stylesheet" href="admin/assets/css/anunturi.css">
+  <style>
+    #announcements-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+    }
+    .announcement-card {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 1rem;
+      width: 300px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .announcement-card h2 {
+      font-size: 1.2rem;
+      margin: 0 0 0.5rem;
+    }
+    .announcement-card p {
+      margin: 0.3rem 0;
+    }
+    .announcement-card .price {
+      font-weight: bold;
+      margin-top: 0.5rem;
+    }
+    .announcement-card a.details-btn {
+      display: inline-block;
+      margin-top: 0.5rem;
+      padding: 0.4rem 0.8rem;
+      background: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+    .announcement-card a.details-btn:hover {
+      background: #0056b3;
+    }
+    #filters {
+      margin: 1rem auto;
+      max-width: 700px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    #filters label {
+      display: flex;
+      flex-direction: column;
+      font-size: 0.9rem;
+    }
+    #filters button {
+      align-self: flex-end;
+      padding: 0.5rem 1rem;
+    }
+    #results-count {
+      text-align: center;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
- 
+  <header>
+    <h1>Anunțuri Imobiliare</h1>
+    <nav><!--NAVIGATION--></nav>
+  </header>
 
   <main>
-    <?php if (empty($anunturi)): ?>
-      <p>Nu există anunțuri de afișat.</p>
-    <?php else: ?>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Autor</th>
-            <th>Titlu</th>
-            <th>Descriere</th>
-            <th>Preț</th>
-            <th>Locație</th>
-            <th>Creat la</th>
-            <th>Actualizat la</th>
-            <th>Acțiuni</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($anunturi as $anunt): ?>
-          <tr>
-            <td><?= htmlspecialchars($anunt['id'], ENT_QUOTES, 'UTF-8') ?></td>
-            <td><?= htmlspecialchars($anunt['author'], ENT_QUOTES, 'UTF-8') ?></td>
-            <td><?= htmlspecialchars($anunt['titlu'], ENT_QUOTES, 'UTF-8') ?></td>
-            <td>
-              <?= nl2br(htmlspecialchars($anunt['descriere'], ENT_QUOTES, 'UTF-8')) ?>
-            </td>
-            <td>
-              <?= number_format($anunt['pret'], 2, ',', ' ') ?> lei
-            </td>
-            <td><?= htmlspecialchars($anunt['locatie'], ENT_QUOTES, 'UTF-8') ?></td>
-            <td><?= htmlspecialchars($anunt['created_at'], ENT_QUOTES, 'UTF-8') ?></td>
-            <td>
-              <?= $anunt['updated_at']
-                   ? htmlspecialchars($anunt['updated_at'], ENT_QUOTES, 'UTF-8')
-                   : '-' ?>
-            </td>
-            <td>
-              <a href="/TW/public/adauga_anunt.php?id=<?= $anunt['id'] ?>">Editează</a> |
-              <a href="/TW/public/anunt_delete.php?id=<?= $anunt['id'] ?>"
-                 onclick="return confirm('Sigur ștergi acest anunț?');">
-                Șterge
-              </a>
-            </td>
-          </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    <?php endif; ?>
+    <section id="filters">
+      <label>
+        Tip tranzacție:
+        <select id="filter-transaction">
+          <option value="">Toate</option>
+        </select>
+      </label>
+      <label>
+        Tip proprietate:
+        <select id="filter-property-type">
+          <option value="">Toate</option>
+        </select>
+      </label>
+      <label>
+        Camere min:
+        <input type="number" id="filter-rooms-min" min="0" placeholder="ex: 1">
+      </label>
+      <label>
+        Preț max:
+        <input type="number" id="filter-price-max" min="0" step="0.01" placeholder="ex: 100000">
+      </label>
+      <button id="apply-filters">Aplică filtre</button>
+    </section>
 
-    <p><a href="/TW/public/adauga_anunt.php" class="btn">Adaugă un nou anunț</a></p>
+    <section id="announcements-container">
+      <!-- JS will populate here -->
+    </section>
+    <div id="results-count"></div>
   </main>
+
+  <script src="/TW/public/admin/assets/js/anunturi.js"></script>
 </body>
 </html>

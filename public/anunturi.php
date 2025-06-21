@@ -1,114 +1,31 @@
 <?php
 // public/anunturi.php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 require_once __DIR__ . '/../bootstrap.php';
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+// Build the nav HTML
 $user = $_SESSION['user_id'] ?? null;
-?>
-<!DOCTYPE html>
-<html lang="ro">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Anunțuri Imobiliare</title>
-  <!-- CSS principal -->
-  <link rel="stylesheet" href="admin/assets/css/imob.css">
-  <link rel="stylesheet" href="admin/assets/css/anunturi.css">
-  <style>
-    #announcements-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      justify-content: center;
-    }
-    .announcement-card {
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 1rem;
-      width: 300px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .announcement-card h2 {
-      font-size: 1.2rem;
-      margin: 0 0 0.5rem;
-    }
-    .announcement-card p {
-      margin: 0.3rem 0;
-    }
-    .announcement-card .price {
-      font-weight: bold;
-      margin-top: 0.5rem;
-    }
-    .announcement-card a.details-btn {
-      display: inline-block;
-      margin-top: 0.5rem;
-      padding: 0.4rem 0.8rem;
-      background: #007bff;
-      color: white;
-      text-decoration: none;
-      border-radius: 4px;
-    }
-    .announcement-card a.details-btn:hover {
-      background: #0056b3;
-    }
-    /* Stil pentru filtre */
-    #filters { margin: 1rem auto; max-width: 700px; display: flex; flex-wrap: wrap; gap: 1rem; }
-    #filters label { display: flex; flex-direction: column; font-size: 0.9rem; }
-    #filters button { align-self: flex-end; padding: 0.5rem 1rem; }
-    #results-count { text-align: center; margin-top: 1rem; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Anunțuri Imobiliare</h1>
-    <nav>
-      <?php if ($user): ?>
-        <a href="logout.php">Logout</a>
-      <?php else: ?>
-        <a href="register_form.php">Înregistrare</a>
-        <a href="templates/login.html">Autentificare</a>
-      <?php endif; ?>
-      <a href="imob.php">Acasă</a>
-      <?php if ($user): ?>
-        <a href="adauga_anunt.php">Adaugă Anunț</a>
-      <?php endif; ?>
-    </nav>
-  </header>
+if ($user) {
+    $nav = implode(' ',
+        [
+          '<a href="logout.php">Logout</a>',
+          '<a href="imob.php">Acasă</a>',
+          '<a href="templates/adauga_anunt.html">Adaugă Anunț</a>',
+        ]);
+} else {
+    $nav = implode(' ',
+        [
+          '<a href="register_form.php">Înregistrare</a>',
+          '<a href="templates/login.html">Autentificare</a>',
+          '<a href="imob.php">Acasă</a>',
+        ]);
+}
 
-  <main>
-    <section id="filters">
-      <label>
-        Tip tranzacție:
-        <select id="filter-transaction">
-          <option value="">Toate</option>
-        </select>
-      </label>
-      <label>
-        Tip proprietate:
-        <select id="filter-property-type">
-          <option value="">Toate</option>
-        </select>
-      </label>
-      <label>
-        Camere min:
-        <input type="number" id="filter-rooms-min" min="0" placeholder="ex: 1">
-      </label>
-      <label>
-        Preț max:
-        <input type="number" id="filter-price-max" min="0" step="0.01" placeholder="ex: 100000">
-      </label>
-      <button id="apply-filters">Aplică filtre</button>
-    </section>
-
-    <section id="announcements-container">
-      <!-- JS va popula aici -->
-    </section>
-    <div id="results-count"></div>
-  </main>
-
-  <!-- Include scriptul JS din assets/js -->
-  <script src="/TW/public/admin/assets/js/anunturi.js"></script>
-</body>
-</html>
+// Load template and inject nav
+$template = file_get_contents(__DIR__ . '/templates/anunturi.html');
+echo str_replace('<!--NAVIGATION-->', $nav, $template);

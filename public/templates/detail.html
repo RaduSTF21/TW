@@ -1,33 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Property Details</title>
+  <title>Detalii Proprietate</title>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+    integrity="sha256-sA+zQGrjdY6gYkQSa0auZh0elxtwYgw8pMVd8aLkPsY="
+    crossorigin=""
+  />
+
   <style>
-    body { font-family: Arial; padding: 1rem; max-width: 800px; margin: auto; }
-    .images { display: flex; gap: 0.5rem; overflow-x: auto; margin-bottom: 1rem; }
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; padding: 1rem; }
+    .back { margin-bottom: 1rem; display: inline-block; }
+    .images { display: flex; gap: .5rem; overflow-x: auto; margin-bottom: 1rem; }
     .images img { max-height: 200px; border-radius: 4px; }
     .info { margin-bottom: 1rem; }
+    /* the map container */
+    #map { height: 300px; margin-top: 1rem; border: 1px solid #ccc; }
   </style>
 </head>
 <body>
-  <button onclick="history.back()">← Back to map</button>
-  <h1 id="title">Loading…</h1>
+  <button class="back" onclick="history.back()">← Înapoi la listă</button>
+  <h1 id="title">Se încarcă…</h1>
   <div class="images" id="images"></div>
   <div class="info" id="info"></div>
 
-  <script>
+  <!-- Map will go here -->
+  <div id="map"></div>
 
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+    integrity="sha256-QVYV2vjqz8FZNGjqmrGIbsm28wGq1smmNj/4KfqYN6w="
+    crossorigin=""
+  ></script>
+
+  <script>
+    // Grab the `id` from ?id=…
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
     if (!id) {
-      document.body.innerHTML = '<p>Property ID missing.</p>';
+      document.body.innerHTML = '<p>ID proprietate lipsă.</p>';
       throw new Error('Missing id');
     }
 
-
-    fetch(`api/property.php?id=${id}`)
+    // Fetch property + images
+    fetch(`/TW/public/api/property.php?id=${id}`)
       .then(res => res.json())
       .then(data => {
         if (data.error) {
@@ -36,30 +58,48 @@
         }
         const p = data.property;
 
+        // Title
         document.getElementById('title').textContent = p.title;
 
+        // Images
         const imgContainer = document.getElementById('images');
         if (data.images.length) {
           data.images.forEach(img => {
             const el = document.createElement('img');
-            el.src = `uploads/${img.filename}`;
+            el.src = `/TW/public/uploads/${encodeURIComponent(img.filename)}`;
             el.alt = img.alt_text || p.title;
             imgContainer.appendChild(el);
           });
         } else {
-          imgContainer.textContent = 'No images.';
+          imgContainer.textContent = 'Nu există imagini.';
         }
 
+        // Info block
         const info = document.getElementById('info');
         info.innerHTML = `
-          <p><strong>Price:</strong> €${p.price}</p>
-          <p><strong>Description:</strong><br>${p.description}</p>
-          <p><strong>Location:</strong> ${p.latitude}, ${p.longitude}</p>
+          <p><strong>Preț:</strong> €${parseFloat(p.price).toLocaleString('ro-RO', {
+            minimumFractionDigits: 2, maximumFractionDigits: 2
+          })}</p>
+          <p><strong>Descriere:</strong><br>${p.description}</p>
+          <p><strong>Locație (lat, lng):</strong> ${p.latitude}, ${p.longitude}</p>
         `;
+
+        // Initialize Leaflet map
+        const lat = parseFloat(p.latitude);
+        const lng = parseFloat(p.longitude);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          const map = L.map('map').setView([lat, lng], 15);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+          }).addTo(map);
+          L.marker([lat, lng]).addTo(map);
+        } else {
+          document.getElementById('map').innerHTML = '<p>Coordonate invalide pentru hartă.</p>';
+        }
       })
       .catch(err => {
         console.error(err);
-        document.body.innerHTML = '<p>Error loading property.</p>';
+        document.body.innerHTML = '<p>Eroare la încărcarea proprietății.</p>';
       });
   </script>
 </body>

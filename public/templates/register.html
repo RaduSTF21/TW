@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Înregistrare - Imobiliare Iași</title>
+  <link rel="stylesheet" href="../admin/assets/css/login.css"/>
+  <style>
+    .form-container { max-width: 400px; margin: 2rem auto; }
+    .form-container label { display: block; margin-bottom: .5rem; }
+    .form-container input { width: 100%; padding: .5rem; margin-bottom: 1rem; }
+    .error { color: red; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h1>Înregistrează‑te</h1>
+    <form action="../register.php" method="POST">
+      <label>
+        Nume utilizator:
+        <input type="text" name="username" required>
+      </label>
+      <label>
+        Email:
+        <input type="email" name="email" required>
+      </label>
+      <label>
+        Parolă:
+        <input type="password" name="password" required minlength="6">
+      </label>
+      <label>
+        Confirmă parola:
+        <input type="password" name="confirm_password" required minlength="6">
+      </label>
+      <button type="submit">Înregistrează‑te</button>
+    </form>
+    <p style="text-align:center; margin-top:1rem;">
+      Ai deja cont? <a href="login.html">Autentifică‑te</a>
+    </p>
+  </div>
+</body>
+</html>

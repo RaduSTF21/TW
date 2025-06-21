@@ -1,13 +1,11 @@
-/* Reset ușor */
+/* Reset and base */
 * {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: Arial, sans-serif;
+  box-sizing: border-box;
 }
-
-/* Body */
 body {
+  font-family: Arial, sans-serif;
   background-color: #f9f9f9;
   color: #333;
   line-height: 1.6;
@@ -16,161 +14,215 @@ body {
 /* Header */
 header {
   background-color: #0056b3;
-  color: white;
-  padding: 1rem 2rem;
+  color: #fff;
   text-align: center;
+  padding: 1rem 2rem;
+}
+header .logo {
   font-size: 1.8rem;
   font-weight: bold;
-  letter-spacing: 1px;
 }
 
 /* Navigation */
 nav {
   background-color: #004494;
-  padding: 0.5rem 2rem;
   display: flex;
   justify-content: center;
-  gap: 1.5rem;
   flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.5rem 2rem;
 }
-
 nav a {
-  color: white;
+  color: #fff;
   text-decoration: none;
   font-weight: 600;
   padding: 0.5rem 0.8rem;
   border-radius: 4px;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.2s;
 }
-
 nav a:hover {
   background-color: #003366;
 }
 
-/* Main Content */
+/* Main content wrapper */
 .main-content {
   max-width: 960px;
   margin: 2rem auto;
   padding: 0 1rem;
 }
 
-/* Titlu principal */
-.main-content h1, .main-content h2 {
+/* Section titles */
+.main-content h2 {
   margin-bottom: 1rem;
   color: #0056b3;
 }
 
-/* Filtre */
-.filters {
-  background-color: white;
+/* Search box and filters */
+.search-box {
+  background: #fff;
   padding: 1rem;
   border-radius: 8px;
-  box-shadow: 0 0 8px rgb(0 0 0 / 0.1);
+  box-shadow: 0 0 8px rgba(0,0,0,0.1);
   margin-bottom: 2rem;
+}
+.filter-row {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  align-items: center;
+  margin-bottom: 1rem;
 }
-
-.filters label {
-  display: flex;
-  flex-direction: column;
+.filter-item {
+  flex: 1;
+  min-width: 140px;
+}
+.filter-item label {
+  display: block;
   font-weight: 600;
   font-size: 0.9rem;
-  color: #555;
+  margin-bottom: 0.3rem;
 }
-
-.filters select,
-.filters input[type="number"] {
-  margin-top: 0.4rem;
+.filter-item select,
+.filter-item input[type="number"] {
+  width: 100%;
   padding: 0.4rem 0.6rem;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 1rem;
-  width: 140px;
 }
 
-.filters button {
+/* Search button */
+#search-btn {
   background-color: #0056b3;
+  color: #fff;
   border: none;
-  color: white;
-  padding: 0.5rem 1.2rem;
+  padding: 0.6rem 1.2rem;
   font-weight: 700;
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  margin-left: auto;
+  transition: background-color 0.2s;
 }
-
-.filters button:hover {
+#search-btn:hover {
   background-color: #003d80;
 }
 
-/* Buton Arată proprietăți aproape de mine */
-#btnLocate {
-  display: block;
-  margin: 0 auto 2rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 0.7rem 1.5rem;
-  font-weight: 700;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-#btnLocate:hover {
-  background-color: #0056b3;
-}
-
-/* Grid pentru proprietăți */
-.properties-grid {
+/* Properties grid */
+#property-container.properties-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill,minmax(280px,1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
-/* Card proprietate */
+/* Property card */
 .property-card {
-  background: white;
-  padding: 1rem;
+  background: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 7px rgb(0 0 0 / 0.1);
+  overflow: hidden;
+  box-shadow: 0 2px 7px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s;
+}
+.property-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Image container with responsive aspect ratio */
+.property-card .property-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;    /* adjust ratio as needed */
+  overflow: hidden;
+  position: relative;
+}
+.property-card .property-image img {
+  position: absolute;
+  top: 0; 
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Info area */
+.property-card .property-info {
+  padding: 1rem;
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: box-shadow 0.3s ease;
 }
-
-.property-card:hover {
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
-}
-
-.see-all button {
-  display: block;
-  margin: 2rem auto 0 auto;
-  background-color: #0056b3;
-  color: white;
-  border: none;
-  padding: 0.7rem 1.5rem;
-  font-weight: 700;
-  font-size: 1rem;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  width: fit-content;
-  min-width: 180px;
-  text-align: center;
-}
-
-.see-all button:hover {
-  background-color: #003d80;
-}
-
-.property-card h3 {
+.property-card .property-info h3 {
   margin-bottom: 0.5rem;
   color: #004494;
+  font-size: 1.1rem;
+}
+.property-card .property-info .price {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.property-card .property-info .snippet {
+  flex: 1;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  color: #555;
+}
+.property-card .property-info .btn-details {
+  align-self: flex-start;
+  background: #06c;
+  color: #fff;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.property-card .property-info .btn-details:hover {
+  background: #049;
 }
 
+/* Footer */
+footer {
+  background: #333;
+  color: #ddd;
+  padding: 2rem 1rem;
+  margin-top: 2rem;
+}
+.footer-content {
+  max-width: 960px;
+  margin: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+.footer-section {
+  flex: 1;
+  min-width: 200px;
+}
+.footer-section h3 {
+  margin-bottom: 0.5rem;
+  color: #fff;
+}
+.footer-section p,
+.footer-section li {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+.footer-section a {
+  color: #ddd;
+  text-decoration: none;
+}
+.footer-section a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 575.98px) {
+  .filter-row {
+    flex-direction: column;
+  }
+  #property-container.properties-grid {
+    grid-template-columns: 1fr;
+  }
+  .footer-content {
+    flex-direction: column;
+  }
+}
