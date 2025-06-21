@@ -1,51 +1,155 @@
+/* Reset ușor */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* Body */
+body {
+  background-color: #f9f9f9;
+  color: #333;
+  line-height: 1.6;
+}
+
 /* Header */
 header {
-  background: #06c;
-  color: #fff;
+  background-color: #0056b3;
+  color: white;
+  padding: 1rem 2rem;
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* Navigation */
+nav {
+  background-color: #004494;
+  padding: 0.5rem 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.5rem 0.8rem;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+nav a:hover {
+  background-color: #003366;
+}
+
+/* Main Content */
+.main-content {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* Titlu principal */
+.main-content h1, .main-content h2 {
+  margin-bottom: 1rem;
+  color: #0056b3;
+}
+
+/* Filtre */
+.filters {
+  background-color: white;
   padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px rgb(0 0 0 / 0.1);
+  margin-bottom: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
 }
 
-/* Navigation links */
-header nav a {
-  color: #fff;
-  text-decoration: none;
-  margin-right: 1rem;
+.filters label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #555;
 }
 
-/* Footer links */
-.footer-section a {
-  color: #06c;
-  text-decoration: none;
+.filters select,
+.filters input[type="number"] {
+  margin-top: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  width: 140px;
 }
 
-.footer-section a:hover {
-  text-decoration: underline;
+.filters button {
+  background-color: #0056b3;
+  border: none;
+  color: white;
+  padding: 0.5rem 1.2rem;
+  font-weight: 700;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-left: auto;
 }
 
-/* Social links */
-.social-links a {
-  margin-right: 0.5rem;
-  color: #06c;
+.filters button:hover {
+  background-color: #003d80;
 }
 
-.social-links a:hover {
-  color: #049;
+/* Buton Arată proprietăți aproape de mine */
+#btnLocate {
+  display: block;
+  margin: 0 auto 2rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  font-weight: 700;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-/* General navigation hover */
-header nav a:hover {
-  text-decoration: underline;
+#btnLocate:hover {
+  background-color: #0056b3;
 }
 
-/* Responsive adjustments for mobile */
-@media (max-width: 575.98px) {
-  nav {
-    display: block;
-    text-align: center;
-  }
-
-  nav a {
-    display: block;
-    margin: 0.5rem 0;
-  }
+/* Grid pentru proprietăți */
+.properties-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(280px,1fr));
+  gap: 1.5rem;
 }
+
+/* Card proprietate */
+.property-card {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 7px rgb(0 0 0 / 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: box-shadow 0.3s ease;
+}
+
+.property-card:hover {
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+}
+
+.property-card h3 {
+  margin-bottom: 0.5rem;
+  color: #004494;
+}
+

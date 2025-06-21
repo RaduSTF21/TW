@@ -5,6 +5,9 @@ require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/../csrf.php';
 
 $csrfToken = csrf_get_token();
+
+// Definește aici calea de bază către folderul TW, o poți ajusta după nevoie
+$base_url = '/TW';
 ?>
 <!DOCTYPE html>
 <html lang="ro">
@@ -12,7 +15,8 @@ $csrfToken = csrf_get_token();
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ImobiliareIasi.ro – Apartamente de închiriat</title>
-  <link rel="stylesheet" href="/TW/assets/css/imob.css" />
+  <link rel="stylesheet" href="<?= $base_url ?>/public/admin/assets/css/imob.css">
+
 </head>
 <body>
   <header>
@@ -22,7 +26,7 @@ $csrfToken = csrf_get_token();
     <a href="imob.php">Acasă</a>
     <a href="anunturi.php">Anunțuri</a>
     <?php if ($isLoggedIn): ?>
-      <a href="/TW/templates/adauga_anunt.html">Adaugă Anunț</a>
+      <a href="<?= $base_url ?>/templates/adauga_anunt.html">Adaugă Anunț</a>
       <a href="logout.php">Logout</a>
     <?php else: ?>
       <a href="login_form.php">Login</a>
@@ -68,6 +72,8 @@ $csrfToken = csrf_get_token();
   </footer>
 
   <!-- Your external JS -->
-  <script src="/TW/assets/js/imob.js"></script>
+  <script src="<?= $base_url ?>/assets/js/imob.js"></script>
 </body>
-</html>
+</html>  itit dau html ul pentru pathul la css si modifica in acest php ca sa fie acelasi path la css
+
+
