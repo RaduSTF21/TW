@@ -45,10 +45,10 @@ $base_url = '/TW';
     <a href="imob.php">Acasă</a>
     <a href="anunturi.php">Anunțuri</a>
     <?php if ($isLoggedIn): ?>
-      <a href="<?= $base_url ?>/public/templates/adauga_anunt.html">Adaugă Anunț</a>
+      <a href=templates/adauga_anunt.html>Adaugă Anunț</a>
       <a href="logout.php">Logout</a>
     <?php else: ?>
-      <a href="login_form.php">Login</a>
+      <a href="templates/login.html">Login</a>
       <a href="register_form.php">Înregistrare</a>
     <?php endif; ?>
   </nav>

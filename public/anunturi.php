@@ -68,7 +68,7 @@ $user = $_SESSION['user_id'] ?? null;
         <a href="logout.php">Logout</a>
       <?php else: ?>
         <a href="register_form.php">Înregistrare</a>
-        <a href="login_form.php">Autentificare</a>
+        <a href="templates/login.html">Autentificare</a>
       <?php endif; ?>
       <a href="imob.php">Acasă</a>
       <?php if ($user): ?>
