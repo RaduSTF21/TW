@@ -17,6 +17,25 @@ $base_url = '/TW';
   <title>ImobiliareIasi.ro – Apartamente de închiriat</title>
   <link rel="stylesheet" href="<?= $base_url ?>/public/admin/assets/css/imob.css">
 
+  <style>
+    /* Stilizare link Vezi toate anunțurile ca buton */
+    .btn-see-all {
+      display: inline-block;
+      background-color: #0056b3;
+      color: white;
+      padding: 0.7rem 1.5rem;
+      font-weight: 700;
+      border-radius: 5px;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      transition: background-color 0.3s ease;
+    }
+    .btn-see-all:hover {
+      background-color: #003d80;
+    }
+  </style>
+
 </head>
 <body>
   <header>
@@ -63,7 +82,7 @@ $base_url = '/TW';
     <div id="properties-container" class="properties-grid"></div>
 
     <div class="see-all">
-      <button id="btnSeeAll" type="button">Vezi toate anunțurile</button>
+      <a href="anunturi.php" class="btn-see-all">Vezi toate anunțurile</a>
     </div>
   </main>
 
@@ -74,6 +93,4 @@ $base_url = '/TW';
   <!-- Your external JS -->
   <script src="<?= $base_url ?>/public/assets/js/imob.js"></script>
 </body>
-</html>  
-
-
+</html>

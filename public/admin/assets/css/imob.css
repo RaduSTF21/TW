@@ -148,6 +148,27 @@ nav a:hover {
   box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
 }
 
+.see-all button {
+  display: block;
+  margin: 2rem auto 0 auto;
+  background-color: #0056b3;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: fit-content;
+  min-width: 180px;
+  text-align: center;
+}
+
+.see-all button:hover {
+  background-color: #003d80;
+}
+
 .property-card h3 {
   margin-bottom: 0.5rem;
   color: #004494;
