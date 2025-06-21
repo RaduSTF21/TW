@@ -44,8 +44,20 @@ if (isset($_GET['rooms_min']) && is_numeric($_GET['rooms_min'])) {
     $params[':rooms_min'] = $_GET['rooms_min'];
 }
 
-$sql = "SELECT id, title, price, rooms, transaction_type, property_type, created_at
-        FROM properties";
+ $sql = "SELECT p.id,
+             p.title,
+             p.price,
+             p.rooms,
+             p.transaction_type,
+             p.property_type,
+             p.created_at,
+                p.description,
+             (SELECT filename
+                FROM property_images pi
+               WHERE pi.property_id = p.id
+            ORDER BY pi.id
+               LIMIT 1
+             ) AS image  FROM properties p";
 if ($where) {
     $sql .= ' WHERE ' . implode(' AND ', $where);
 }

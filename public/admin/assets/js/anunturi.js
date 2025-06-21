@@ -79,6 +79,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.className = 'announcement-card';
 
+      if(item.image){
+        const img = document.createElement('img');
+        img.src = '/TW/public/uploads/' + encodeURIComponent(item.image);
+        img.alt = item.title; 
+        img.loading = 'lazy'; // Încărcare lazy pentru performanță
+        img.style.width = '100%'; // Asigură că imaginea ocupă lățimea cardului
+        img.style.height = 'auto'; // Păstrează proporțiile imaginii
+        img.style.display = 'block'; // Asigură că imaginea este afișată ca bloc
+
+        card.appendChild(img);
+      }
+
       const h2 = document.createElement('h2');
       h2.textContent = item.title;
       card.appendChild(h2);

@@ -14,8 +14,8 @@ $user = $_SESSION['user_id'] ?? null;
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Anunțuri Imobiliare</title>
   <!-- CSS principal -->
-  <link rel="stylesheet" href="../imob.css">
-  <link rel="stylesheet" href="../anunturi.css">
+  <link rel="stylesheet" href="admin/assets/css/imob.css">
+  <link rel="stylesheet" href="admin/assets/css/anunturi.css">
   <style>
     #announcements-container {
       display: flex;

@@ -14,7 +14,7 @@ $csrfToken = $_SESSION['csrf_token'];
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Login</title>
-  <link rel="stylesheet" href="/TW/assets/css/imob.css">
+  <link rel="stylesheet" href="admin/assets/css/imob.css">
   <style>
     .error { color: red; }
     .success { color: green; }

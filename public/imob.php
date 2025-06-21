@@ -26,7 +26,7 @@ $base_url = '/TW';
     <a href="imob.php">Acasă</a>
     <a href="anunturi.php">Anunțuri</a>
     <?php if ($isLoggedIn): ?>
-      <a href="<?= $base_url ?>/templates/adauga_anunt.html">Adaugă Anunț</a>
+      <a href="<?= $base_url ?>/public/templates/adauga_anunt.html">Adaugă Anunț</a>
       <a href="logout.php">Logout</a>
     <?php else: ?>
       <a href="login_form.php">Login</a>
@@ -72,8 +72,8 @@ $base_url = '/TW';
   </footer>
 
   <!-- Your external JS -->
-  <script src="<?= $base_url ?>/assets/js/imob.js"></script>
+  <script src="<?= $base_url ?>/public/assets/js/imob.js"></script>
 </body>
-</html>  itit dau html ul pentru pathul la css si modifica in acest php ca sa fie acelasi path la css
+</html>  
 
 
