@@ -1,17 +1,33 @@
 <?php
 // bootstrap.php
-// Încarcă variabile de mediu .env dacă folosești vlucas/phpdotenv
+
+// Autoload (de ex. pentru phpdotenv)
 $autoload = __DIR__ . '/vendor/autoload.php';
 if (file_exists($autoload)) {
     require_once $autoload;
-    // Încarcă .env din rădăcina proiectului
     if (file_exists(__DIR__ . '/.env')) {
         $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
         $dotenv->load();
     }
 }
 
-// Config DB din environment sau config
+// Pornire sesiune și CSRF token
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// Funcție de verificare CSRF
+function verify_csrf_token(string $token): bool {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    return !empty($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+}
+
+// Config DB din environment sau valori implicite
 $dbHost = getenv('DB_HOST') ?: '127.0.0.1';
 $dbPort = getenv('DB_PORT') ?: '3306';
 $dbName = getenv('DB_DATABASE') ?: getenv('DB_NAME') ?: 'real_estate';
@@ -23,29 +39,19 @@ $options = [
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
 ];
 
-function get_db_connection() {
+// Funcție de obținere conexiune PDO
+function get_db_connection(): PDO {
     global $dsn, $dbUser, $dbPass, $options;
     static $pdo;
-    if (!$pdo) {
+    if ($pdo === null) {
         try {
             $pdo = new PDO($dsn, $dbUser, $dbPass, $options);
         } catch (PDOException $e) {
-            // În dezvoltare afișăm eroarea; în producție loghează intern
             http_response_code(500);
-            exit(json_encode(['error' => 'DB Connection failed: ' . $e->getMessage()]));
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['error' => 'DB Connection failed']);
+            exit;
         }
     }
     return $pdo;
-}
-
-// CSRF: inițializare token în sesiune
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-
-function verify_csrf_token($token) {
-    return hash_equals($_SESSION['csrf_token'] ?? '', $token);
 }

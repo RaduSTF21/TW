@@ -1,60 +1,60 @@
-@ -1,64 +1,59 @@
 <?php
-// File: public/api/properties.php
+// public/api/properties.php
 
-require_once __DIR__ . '/../../config/db.php'; // Adjust path if needed
+require_once __DIR__ . '/../../bootstrap.php'; // sau calea corectă către bootstrap/db
+$pdo = get_db_connection();
+header('Content-Type: application/json');
 
-// Build WHERE clauses from filters
-$where   = [];
-$params  = [];
+$action = $_GET['action'] ?? '';
 
+if ($action === 'filters') {
+    try {
+        $stmt = $pdo->query('SELECT name FROM transaction_types ORDER BY name');
+        $tt = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $pdo->query('SELECT name FROM property_types ORDER BY name');
+        $pt = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode([
+            'transaction_types' => $tt,
+            'property_types'    => $pt
+        ]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Eroare la încărcare filtre: ' . $e->getMessage()]);
+    }
+    exit;
+}
+
+// Construiește WHERE după parametri
+$where = [];
+$params = [];
 if (!empty($_GET['transaction'])) {
-    $where[]           = 'transaction_type = :transaction';
+    $where[] = 'transaction_type = :transaction';
     $params[':transaction'] = $_GET['transaction'];
 }
 if (!empty($_GET['property_type'])) {
-    $where[]              = 'property_type = :ptype';
-    $params[':ptype']     = $_GET['property_type'];
+    $where[] = 'property_type = :ptype';
+    $params[':ptype'] = $_GET['property_type'];
 }
 if (isset($_GET['price_max']) && is_numeric($_GET['price_max'])) {
-    $where[]                  = 'price <= :price_max';
-    $params[':price_max']     = $_GET['price_max'];
+    $where[] = 'price <= :price_max';
+    $params[':price_max'] = $_GET['price_max'];
 }
 if (isset($_GET['rooms_min']) && is_numeric($_GET['rooms_min'])) {
-    $where[]                  = 'rooms >= :rooms_min';
-    $params[':rooms_min']     = $_GET['rooms_min'];
+    $where[] = 'rooms >= :rooms_min';
+    $params[':rooms_min'] = $_GET['rooms_min'];
 }
 
-// Base query
 $sql = "SELECT id, title, price, rooms, transaction_type, property_type, created_at
         FROM properties";
-
-// Apply filters
 if ($where) {
     $sql .= ' WHERE ' . implode(' AND ', $where);
 }
-
-// Newest first
 $sql .= ' ORDER BY created_at DESC';
 
-// Apply limit if given
-if (isset($_GET['limit']) && is_numeric($_GET['limit'])) {
-    $sql .= ' LIMIT :limit';
+$stmt = $pdo->prepare($sql);
+foreach ($params as $k => $v) {
+    $stmt->bindValue($k, $v);
 }
-
-$stmt = $conn->prepare($sql);
-
-// Bind filter params
-foreach ($params as $key => $val) {
-    $stmt->bindValue($key, $val);
-}
-// Bind limit as integer
-if (isset($_GET['limit']) && is_numeric($_GET['limit'])) {
-    $stmt->bindValue(':limit', (int)$_GET['limit'], PDO::PARAM_INT);
-}
-
 $stmt->execute();
 $listings = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-header('Content-Type: application/json');
 echo json_encode($listings);

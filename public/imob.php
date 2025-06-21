@@ -1,4 +1,3 @@
-@ -1,89 +1,73 @@
 <?php
 // File: public/imob.php
 
