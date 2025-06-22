@@ -18,4 +18,4 @@ if ($error) {
 }
 
 // Output the static HTML form
-readfile(__DIR__ . '/register.html');
+readfile(__DIR__ . '/templates/register.html');

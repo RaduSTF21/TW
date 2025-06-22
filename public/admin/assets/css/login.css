@@ -1,155 +1,87 @@
-/* Reset simplu */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
+/* Stil general */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+  font-family: Arial, sans-serif;
+  background-color: #f4f6f9;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
 }
 
+/* Chenar principal */
 .login-container {
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    width: 100%;
-    max-width: 400px;
+  background-color: #fff;
+  border: 1px solid #ccc; /* <- Chenar vizibil */
+  border-radius: 8px;
+  max-width: 420px;
+  width: 100%;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+/* Header simplu */
 .login-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 30px;
-    text-align: center;
+  text-align: center;
+  margin-bottom: 1.5rem;
 }
-
-.back-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.3s ease;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 15px;
-}
-
-.back-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
 .login-header h1 {
-    font-size: 24px;
-    margin-bottom: 5px;
+  color: #0056b3;
+  font-size: 1.6rem;
 }
-
 .login-header p {
-    opacity: 0.9;
-    font-size: 14px;
+  color: #777;
+  font-size: 0.95rem;
 }
 
-.login-form {
-    padding: 40px 30px;
+/* Formulare */
+.login-form .form-group {
+  margin-bottom: 1.2rem;
+}
+.login-form label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: bold;
+  color: #333;
+}
+.login-form input {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
-.form-group {
-    margin-bottom: 25px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    color: #333;
-    font-weight: 500;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #e1e5e9;
-    border-radius: 8px;
-    font-size: 16px;
-    transition: border-color 0.3s ease;
-}
-
-.form-group input:focus {
-    outline: none;
-    border-color: #667eea;
-}
-
+/* Buton login */
 .login-btn {
-    width: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 12px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.2s ease;
+  width: 100%;
+  background-color: #0056b3;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
 }
-
 .login-btn:hover {
-    transform: translateY(-2px);
+  background-color: #004494;
 }
 
-.forgot-password {
-    text-align: center;
-    margin-top: 20px;
+/* Buton întoarcere jos */
+.back-btn-wrapper {
+  margin-top: 1.5rem;
+  text-align: center;
 }
-
-.forgot-password a {
-    color: #667eea;
-    text-decoration: none;
-    font-size: 14px;
+.back-btn {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  background-color: #ccc;
+  color: #333;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: 600;
 }
-
-.forgot-password a:hover {
-    text-decoration: underline;
-}
-
-.register-link {
-    text-align: center;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #e1e5e9;
-}
-
-.register-link a {
-    color: #667eea;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.register-link a:hover {
-    text-decoration: underline;
-}
-
-/* Responsive pentru mobil */
-@media (max-width: 480px) {
-    .login-container {
-        margin: 10px;
-    }
-    
-    .login-header {
-        padding: 20px;
-    }
-    
-    .login-form {
-        padding: 30px 20px;
-    }
+.back-btn:hover {
+  background-color: #bbb;
 }

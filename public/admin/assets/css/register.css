@@ -1,58 +1,85 @@
-/* Container */
-.register-container {
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 2rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  animation: pop-up 0.3s ease;
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
 
-/* Form fields */
-.register-container input,
-.register-container select {
+.form-container {
+  background-color: #d0e7ff;
+  border-radius: 15px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
   width: 100%;
-  padding: 0.75rem;
+  max-width: 400px;
+  padding: 15px;
+  box-sizing: border-box;
+}
+
+.form-container form {
+  background-color: white;
+  border-radius: 12px;
+  padding: 30px;
+}
+
+.form-container h1 {
+  text-align: center;
   margin-bottom: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  color: #333;
 }
 
-.register-container select {
-  /* base before focus */
+.form-container label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #333;
 }
 
-.register-container select:focus {
-  border-color: #06c;
+.form-container input {
+  width: 100%;
+  padding: 12px 15px;
+  margin-bottom: 1rem;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
 }
 
-/* Links */
-.links a {
-  color: #06c;
+.form-container input:focus {
+  outline: none;
+  border-color: #4a4a4a;
+}
+
+.form-container button {
+  width: 100%;
+  background-color: #4a4a4a;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.form-container button:hover {
+  transform: translateY(-2px);
+}
+
+.form-container p {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.form-container a {
+  color: #4a4a4a;
   text-decoration: none;
+  font-weight: 500;
 }
 
-.links a:hover {
+.form-container a:hover {
   text-decoration: underline;
-}
-
-.back-link a:hover {
-  text-decoration: underline;
-}
-
-/* Responsive */
-@media (max-width: 575.98px) {
-  .register-container {
-    margin: 1rem;
-    padding: 1rem;
-  }
-}
-
-@keyframes pop-up {
-  0% {
-    transform: scale(0.8);
-  }
-  100% {
-    transform: scale(1);
-  }
 }
