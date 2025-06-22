@@ -1,13 +1,13 @@
 <?php
 // public/api/properties.php
 
-require_once __DIR__ . '/../../bootstrap.php'; // sau calea corectă către bootstrap/db
+require_once __DIR__ . '/../../bootstrap.php';
 $pdo = get_db_connection();
-header('Content-Type: application/json');
 
-$action = $_GET['action'] ?? '';
+header('Content-Type: application/json; charset=utf-8');
 
-if ($action === 'filters') {
+// 1) Preserve old action=filters behavior
+if (isset($_GET['action']) && $_GET['action'] === 'filters') {
     try {
         $stmt = $pdo->query('SELECT name FROM transaction_types ORDER BY name');
         $tt = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -24,49 +24,137 @@ if ($action === 'filters') {
     exit;
 }
 
-// Construiește WHERE după parametri
+// 2) Read standard filters
+$transaction = $_GET['transaction']    ?? '';
+$propertyType= $_GET['property_type']  ?? '';
+$priceMax    = $_GET['price_max']      ?? '';
+$roomsMin    = $_GET['rooms_min']      ?? '';
+$limit       = isset($_GET['limit']) && is_numeric($_GET['limit'])
+               ? (int)$_GET['limit']
+               : null;
+
+// 3) Read optional location params
+$userLat = isset($_GET['lat'])  && is_numeric($_GET['lat'])  ? (float)$_GET['lat']  : null;
+$userLng = isset($_GET['lng'])  && is_numeric($_GET['lng'])  ? (float)$_GET['lng']  : null;
+$radius  = isset($_GET['radius']) && is_numeric($_GET['radius']) ? (float)$_GET['radius'] : null;
+
+// 4) Build WHERE clauses (removed p.active filter)
 $where = [];
 $params = [];
-if (!empty($_GET['transaction'])) {
-    $where[] = 'transaction_type = :transaction';
-    $params[':transaction'] = $_GET['transaction'];
+
+if ($transaction !== '') {
+    $where[] = 'p.transaction_type = :transaction';
+    $params[':transaction'] = $transaction;
 }
-if (!empty($_GET['property_type'])) {
-    $where[] = 'property_type = :ptype';
-    $params[':ptype'] = $_GET['property_type'];
+if ($propertyType !== '') {
+    $where[] = 'p.property_type = :ptype';
+    $params[':ptype'] = $propertyType;
 }
-if (isset($_GET['price_max']) && is_numeric($_GET['price_max'])) {
-    $where[] = 'price <= :price_max';
-    $params[':price_max'] = $_GET['price_max'];
+if ($priceMax !== '' && is_numeric($priceMax)) {
+    $where[] = 'p.price <= :price_max';
+    $params[':price_max'] = $priceMax;
 }
-if (isset($_GET['rooms_min']) && is_numeric($_GET['rooms_min'])) {
-    $where[] = 'rooms >= :rooms_min';
-    $params[':rooms_min'] = $_GET['rooms_min'];
+if ($roomsMin !== '' && is_numeric($roomsMin)) {
+    $where[] = 'p.rooms >= :rooms_min';
+    $params[':rooms_min'] = $roomsMin;
 }
 
- $sql = "SELECT p.id,
-             p.title,
-             p.price,
-             p.rooms,
-             p.transaction_type,
-             p.property_type,
-             p.created_at,
-                p.description,
-             (SELECT filename
-                FROM property_images pi
-               WHERE pi.property_id = p.id
-            ORDER BY pi.id
-               LIMIT 1
-             ) AS image  FROM properties p";
-if ($where) {
-    $sql .= ' WHERE ' . implode(' AND ', $where);
-}
-$sql .= ' ORDER BY created_at DESC';
+// 5) Start building SELECT
+$select = "
+  SELECT
+    p.id,
+    p.title,
+    p.description,
+    p.price,
+    p.rooms,
+    p.transaction_type,
+    p.property_type,
+    p.latitude,
+    p.longitude,
+    p.created_at,
+    -- old front-end expects 'image'
+    (
+      SELECT pi.filename
+        FROM property_images pi
+       WHERE pi.property_id = p.id
+    ORDER BY pi.id
+       LIMIT 1
+    ) AS image
+";
 
-$stmt = $pdo->prepare($sql);
-foreach ($params as $k => $v) {
-    $stmt->bindValue($k, $v);
+// 6) Append distance calculation if location provided
+if ($userLat !== null && $userLng !== null) {
+    $select .= ",
+    (
+      6371 * acos(
+        cos(radians(:ulat)) *
+        cos(radians(p.latitude)) *
+        cos(radians(p.longitude) - radians(:ulng)) +
+        sin(radians(:ulat)) *
+        sin(radians(p.latitude))
+      )
+    ) AS distance
+    ";
+    $params[':ulat'] = $userLat;
+    $params[':ulng'] = $userLng;
 }
-$stmt->execute();
-$listings = $stmt->fetchAll(PDO::FETCH_ASSOC);
-echo json_encode($listings);
+
+// 7) FROM + WHERE
+$sql = $select . "
+  FROM properties p"
+  . (count($where) ? "\n WHERE " . implode(' AND ', $where) : '');
+
+// 8) Radius filter if given
+if ($radius !== null && isset($params[':ulat'])) {
+    $sql .= " HAVING distance <= :radius";
+    $params[':radius'] = $radius;
+}
+
+// 9) ORDER BY
+if (isset($params[':ulat'])) {
+    $sql .= " ORDER BY distance ASC";
+} else {
+    $sql .= " ORDER BY p.created_at DESC";
+}
+
+// 10) LIMIT
+if ($limit !== null) {
+    $sql .= " LIMIT " . $limit;
+}
+
+try {
+    $stmt = $pdo->prepare($sql);
+    foreach ($params as $k => $v) {
+        if (is_int($v)) {
+            $stmt->bindValue($k, $v, PDO::PARAM_INT);
+        } else {
+            $stmt->bindValue($k, $v);
+        }
+    }
+    $stmt->execute();
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // 11) Build final output: keep 'image' for old code, add 'image_url' & 'distance'
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $baseUrl  = $protocol . '://' . $_SERVER['HTTP_HOST']
+              . dirname($_SERVER['SCRIPT_NAME']) . '/../uploads/';
+
+    $results = array_map(function($r) use ($baseUrl) {
+        // image_url for new front-end
+        $r['image_url'] = $r['image']
+            ? $baseUrl . rawurlencode($r['image'])
+            : null;
+        // round distance or keep null
+        if (isset($r['distance'])) {
+            $r['distance'] = round((float)$r['distance'], 2);
+        }
+        return $r;
+    }, $rows);
+
+    echo json_encode($results);
+    exit;
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Eroare API proprietăți: ' . $e->getMessage()]);
+    exit;
+}
