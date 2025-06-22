@@ -1,0 +1,127 @@
+/* Reset și bază */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f6f9;
+  color: #333;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+/* Titlu */
+h1 {
+  text-align: center;
+  color: #0056b3;
+  margin-bottom: 2rem;
+}
+
+/* Formular */
+.account-form {
+  background-color: #fff;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 2rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* Grupe de input */
+.form-group {
+  margin-bottom: 1.2rem;
+}
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+/* Buton submit */
+.btn-submit {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #0056b3;
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.btn-submit:hover {
+  background-color: #004494;
+}
+
+/* Link înapoi */
+.btn-back {
+  display: inline-block;
+  margin: 1.5rem auto 0 auto;
+  color: #0056b3;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border: 1px solid #0056b3;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+}
+.btn-back:hover {
+  background-color: #0056b3;
+  color: white;
+}
+
+/* Mesaje alertă (exemplu stil) */
+.alert {
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+  border-radius: 0.25rem;
+}
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+}
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Listare anunțuri utilizator (optional) */
+.user-listings {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 1.5rem;
+}
+.user-listings li {
+  margin-bottom: 0.75rem;
+}
+.btn-edit {
+  margin-left: 1rem;
+  font-size: 0.9rem;
+  color: #0056b3;
+  text-decoration: none;
+}
+.btn-edit:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  body {
+    padding: 1rem;
+  }
+  .account-form {
+    padding: 1.5rem;
+  }
+}

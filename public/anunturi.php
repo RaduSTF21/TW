@@ -20,7 +20,7 @@ if ($user) {
 } else {
     $nav = implode(' ',
         [
-          '<a href="register_form.php">Înregistrare</a>',
+          '<a href="templates/register.html">Înregistrare</a>',
           '<a href="templates/login.html">Autentificare</a>',
           '<a href="imob.php">Acasă</a>',
         ]);
