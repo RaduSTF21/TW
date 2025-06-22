@@ -7,71 +7,98 @@ class ListingService
     public static function getTransactionTypes(\PDO $pdo): array
     {
         $stmt = $pdo->query("SELECT id, name FROM transaction_types");
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     // Fetch all property types
     public static function getPropertyTypes(\PDO $pdo): array
     {
         $stmt = $pdo->query("SELECT id, name FROM property_types");
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     // Fetch all amenities
     public static function getAmenities(\PDO $pdo): array
     {
         $stmt = $pdo->query("SELECT id, name FROM amenities");
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     // Fetch all risks
     public static function getRisks(\PDO $pdo): array
     {
         $stmt = $pdo->query("SELECT id, name FROM risks");
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    // Save or update a property (inserting into pivot tables)
+    // Fetch all listings for a given user
+    public static function getByUserId(\PDO $pdo, int $userId): array
+    {
+        $stmt = $pdo->prepare(
+            'SELECT id, title
+               FROM properties
+              WHERE user_id = ?
+           ORDER BY id DESC'
+        );
+        $stmt->execute([$userId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    // Save or update a property (inserting into pivot tables), now enforcing user_id
     public static function saveProperty(\PDO $pdo, array $data, array $amenityIds, array $riskIds): int
     {
-        // 1) Insert or update properties table, get $propertyId
         if (empty($data['id'])) {
-            $sql = "INSERT INTO properties (title, description, price, rooms, transaction_type, property_type, latitude, longitude)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            // INSERT new, include user_id
+            $sql = "INSERT INTO properties 
+                      (title, description, price, rooms, transaction_type, property_type,
+                       latitude, longitude, user_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
-              $data['title'], $data['description'], $data['price'],
-              $data['rooms'], $data['transaction_type'], $data['property_type'],
-              $data['latitude'], $data['longitude']
+                $data['title'], $data['description'], $data['price'],
+                $data['rooms'], $data['transaction_type'], $data['property_type'],
+                $data['latitude'], $data['longitude'], $data['user_id']
             ]);
-            $propertyId = $pdo->lastInsertId();
+            $propertyId = (int)$pdo->lastInsertId();
         } else {
+            // UPDATE, only if owned by this user
             $sql = "UPDATE properties
-                    SET title = ?, description = ?, price = ?, rooms = ?, transaction_type = ?, property_type = ?, latitude = ?, longitude = ?
-                    WHERE id = ?";
+                       SET title            = ?,
+                           description      = ?,
+                           price            = ?,
+                           rooms            = ?,
+                           transaction_type = ?,
+                           property_type    = ?,
+                           latitude         = ?,
+                           longitude        = ?
+                     WHERE id = ? AND user_id = ?";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
-              $data['title'], $data['description'], $data['price'],
-              $data['rooms'], $data['transaction_type'], $data['property_type'],
-              $data['latitude'], $data['longitude'], $data['id']
+                $data['title'], $data['description'], $data['price'],
+                $data['rooms'], $data['transaction_type'], $data['property_type'],
+                $data['latitude'], $data['longitude'], $data['id'], $data['user_id']
             ]);
-            $propertyId = $data['id'];
+            $propertyId = (int)$data['id'];
 
-            // Clear out existing pivots
+            // Clear existing pivots
             $pdo->prepare("DELETE FROM property_amenities WHERE property_id = ?")
                 ->execute([$propertyId]);
-            $pdo->prepare("DELETE FROM property_risks WHERE property_id = ?")
+            $pdo->prepare("DELETE FROM property_risks     WHERE property_id = ?")
                 ->execute([$propertyId]);
         }
 
-        // 2) Insert new amenity pivots
-        $stmtA = $pdo->prepare("INSERT INTO property_amenities (property_id, amenity_id) VALUES (?, ?)");
+        // Re-insert amenity pivots
+        $stmtA = $pdo->prepare(
+            "INSERT INTO property_amenities (property_id, amenity_id) VALUES (?, ?)"
+        );
         foreach ($amenityIds as $amenityId) {
             $stmtA->execute([$propertyId, $amenityId]);
         }
 
-        // 3) Insert new risk pivots
-        $stmtR = $pdo->prepare("INSERT INTO property_risks (property_id, risk_id) VALUES (?, ?)");
+        // Re-insert risk pivots
+        $stmtR = $pdo->prepare(
+            "INSERT INTO property_risks (property_id, risk_id) VALUES (?, ?)"
+        );
         foreach ($riskIds as $riskId) {
             $stmtR->execute([$propertyId, $riskId]);
         }
@@ -79,28 +106,21 @@ class ListingService
         return $propertyId;
     }
 
-    public static function getAll(\PDO $pdo): array
-    {
-        $stmt = $pdo->query("SELECT * FROM properties");
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-
-     public static function getById(\PDO $pdo, int $id): ?array
+    // Fetch a single property by ID
+    public static function getById(\PDO $pdo, int $id): ?array
     {
         $stmt = $pdo->prepare(
-            'SELECT id, title, description, price, latitude, longitude
+            'SELECT id, title, description, price, rooms, transaction_type,
+                    property_type, latitude, longitude, user_id
                FROM properties
               WHERE id = ?'
         );
         $stmt->execute([$id]);
-        $property = $stmt->fetch(\PDO::FETCH_ASSOC);
-        return $property ?: null;
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $row ?: null;
     }
 
-    /**
-     * Fetch all images for a given property_id, in order.
-     * Returns an array of ['filename'=>…, 'alt_text'=>…] entries.
-     */
+    // Fetch all images for a given property_id
     public static function getImages(\PDO $pdo, int $propertyId): array
     {
         $stmt = $pdo->prepare(
@@ -113,4 +133,10 @@ class ListingService
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    // Optionally fetch all listings (admin)
+    public static function getAll(\PDO $pdo): array
+    {
+        $stmt = $pdo->query("SELECT * FROM properties");
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 }

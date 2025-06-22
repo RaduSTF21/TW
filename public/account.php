@@ -2,31 +2,33 @@
 // public/account.php
 
 require_once __DIR__ . '/../bootstrap.php';
-require_once __DIR__ . '/../csrf.php';
 
-// only start if none exists
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+use App\service\UserService;
+use App\service\ListingService;
 
-// redirect if not logged in
+// Redirect if not logged in
 if (empty($_SESSION['user_id'])) {
     header('Location: login_form.php');
     exit;
 }
 
-// get DB connection and UserService
-$pdo = get_db_connection();
-$userService = new \App\Service\UserService($pdo);
+$pdo         = get_db_connection();
+$userService = new UserService($pdo);
+
+// Fetch current user
 $user = $userService->getUserById((int)$_SESSION['user_id']);
 
-// prepare defaults
+// Fetch this user’s listings
+$listings = ListingService::getByUserId($pdo, (int)$_SESSION['user_id']);
+
 $errors    = [];
 $form_name = $user->name;
 $alerts    = '';
 
-// handle POST
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// Handle account‐info form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST'
+    && ($_POST['form_type'] ?? '') === 'account'
+) {
     csrf_validate();
 
     $form_name = trim($_POST['name'] ?? '');
@@ -44,17 +46,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
-        $updateData = ['name' => $form_name];
+        $data = ['name' => $form_name];
         if ($password !== '') {
-            $updateData['password'] = $password;
+            $data['password'] = $password;
         }
-        $userService->updateUser($user->id, $updateData);
+        $userService->updateUser($user->id, $data);
         header('Location: account.php?updated=1');
         exit;
     }
 }
 
-// build alerts HTML
+// Build alerts HTML
 if (!empty($_GET['updated'])) {
     $alerts = '<div class="alert alert-success">Your account has been updated.</div>';
 } elseif (!empty($errors)) {
@@ -65,13 +67,41 @@ if (!empty($_GET['updated'])) {
     $alerts .= '</ul></div>';
 }
 
-// get CSRF token
-$csrfToken = csrf_get_token();
+// Build the listings HTML
+$listingsHtml = '<h2>Your Listings</h2>';
+if (empty($listings)) {
+    $listingsHtml .= '<p>You have no listings yet.</p>';
+} else {
+    $listingsHtml .= '<ul class="user-listings">';
+    foreach ($listings as $ad) {
+        $title = htmlspecialchars($ad['title'], ENT_QUOTES, 'UTF-8');
+        $id    = (int)$ad['id'];
+        $listingsHtml .= "
+<li>
+  {$title}
+  <a class=\"btn-edit\" href=\"edit_listing.php?id={$id}\">Edit</a>
+</li>
+";
+    }
+    $listingsHtml .= '</ul>';
+}
 
-// render template
-$template = file_get_contents(__DIR__ . '/templates/account.html');
+// Load and render template
+$csrfToken = $_SESSION['csrf_token'];
+$template  = file_get_contents(__DIR__ . '/templates/account.html');
+
 echo str_replace(
-    ['<!--ALERTS-->', '<!--CSRF_TOKEN-->', '<!--FORM_NAME-->'],
-    [$alerts, htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'), htmlspecialchars($form_name, ENT_QUOTES, 'UTF-8')],
+    [
+      '<!--ALERTS-->',
+      '<!--CSRF_TOKEN-->',
+      '<!--FORM_NAME-->',
+      '<!--USER_LISTINGS-->'
+    ],
+    [
+      $alerts,
+      htmlspecialchars($csrfToken, ENT_QUOTES),
+      htmlspecialchars($form_name, ENT_QUOTES),
+      $listingsHtml
+    ],
     $template
 );

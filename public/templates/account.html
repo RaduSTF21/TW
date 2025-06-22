@@ -4,16 +4,19 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Account Management</title>
-  <link rel="stylesheet" href="admin/assets/css/imob.css">
+  <link rel="stylesheet" href="admin/assets/css/style.css">
   <style>
-    .alert       { padding: .75rem 1.25rem; margin-bottom: 1rem; border-radius: .25rem; }
-    .alert-success { background-color: #d4edda; color: #155724; }
-    .alert-danger  { background-color: #f8d7da; color: #721c24; }
-    .form-group { margin-bottom: 1rem; }
-    label      { display: block; margin-bottom: .5rem; }
-    input      { width: 100%; padding: .5rem; box-sizing: border-box; }
-    button     { padding: .5rem 1rem; }
-    .btn       { display: inline-block; margin-top: 1rem; text-decoration: none; color: #007bff; }
+    .alert          { padding: .75rem 1.25rem; margin-bottom: 1rem; border-radius: .25rem; }
+    .alert-success  { background-color: #d4edda; color: #155724; }
+    .alert-danger   { background-color: #f8d7da; color: #721c24; }
+    .form-group     { margin-bottom: 1rem; }
+    label           { display: block; margin-bottom: .5rem; }
+    input, select   { width: 100%; padding: .5rem; box-sizing: border-box; }
+    button          { padding: .5rem 1rem; }
+    .btn            { display: inline-block; margin-top: 1rem; text-decoration: none; color: #007bff; }
+    .user-listings  { list-style: none; padding-left: 0; margin-top: 1.5rem; }
+    .user-listings li { margin-bottom: .75rem; }
+    .btn-edit       { margin-left: 1rem; font-size: .9rem; color: #0056b3; text-decoration: none; }
   </style>
 </head>
 <body>
@@ -23,6 +26,7 @@
 
   <form method="post" action="account.php">
     <input type="hidden" name="csrf_token" value="<!--CSRF_TOKEN-->">
+    <input type="hidden" name="form_type" value="account">
 
     <div class="form-group">
       <label for="name">Name</label>
@@ -42,6 +46,9 @@
     <button type="submit">Save Changes</button>
   </form>
 
+  <!--USER_LISTINGS-->
+
+  <br>
   <a href="imob.php" class="btn">Back to Imob Page</a>
 </body>
 </html>
