@@ -40,7 +40,7 @@ function h($str) {
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
   />
-
+  <link rel="stylesheet" href="admin/assets/css/detail.css"/>
   <style>
     body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; padding: 1rem; }
     .back { margin-bottom: 1rem; }
