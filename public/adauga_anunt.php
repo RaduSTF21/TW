@@ -46,7 +46,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
     http_response_code(400);
     header('Content-Type: text/plain; charset=utf-8');
-    echo 'Bad Request';
+    if (isset($e) && $e instanceof Exception) {
+        echo 'Bad Request: ' . $e->getMessage();
+    } else {
+        echo 'Bad Request';
+    }
     exit;
 }
 
